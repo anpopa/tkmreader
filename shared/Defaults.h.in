@@ -1,0 +1,64 @@
+/*-
+ * SPDX-License-Identifier: MIT
+ *-
+ * @date      2021-2022
+ * @author    Alin Popa <alin.popa@fxdata.ro>
+ * @copyright MIT
+ * @brief     Defaults class
+ * @details   Declare defaults values for application
+ *-
+ */
+
+#pragma once
+
+#include <map>
+#include <string>
+
+namespace tkm::reader
+{
+
+class Defaults
+{
+public:
+    enum class Default {
+        Version,
+        Address,
+        Port,
+        Format
+    };
+
+    enum class Arg { Id, Status, Reason, Name, RequestId, What };
+
+    enum class Val { True, False, StatusOkay, StatusError, StatusBusy };
+
+    Defaults()
+    {
+        m_table.insert(std::pair<Default, std::string>(Default::Version, "@GIT_SHA1@"));
+        m_table.insert(std::pair<Default, std::string>(Default::Address, "localhost"));
+        m_table.insert(std::pair<Default, std::string>(Default::Port, "3357"));
+        m_table.insert(std::pair<Default, std::string>(Default::Format, "json"));
+
+        m_args.insert(std::pair<Arg, std::string>(Arg::Id, "Id"));
+        m_args.insert(std::pair<Arg, std::string>(Arg::What, "What"));
+        m_args.insert(std::pair<Arg, std::string>(Arg::Name, "Name"));
+
+        m_vals.insert(std::pair<Val, std::string>(Val::True, "True"));
+        m_vals.insert(std::pair<Val, std::string>(Val::False, "False"));
+        m_vals.insert(std::pair<Val, std::string>(Val::StatusOkay, "Okay"));
+        m_vals.insert(std::pair<Val, std::string>(Val::StatusError, "Error"));
+        m_vals.insert(std::pair<Val, std::string>(Val::StatusBusy, "Busy"));
+    }
+
+    auto getFor(Default key) -> std::string & { return m_table.at(key); }
+    auto argFor(Arg key) -> std::string & { return m_args.at(key); }
+    auto valFor(Val key) -> std::string & { return m_vals.at(key); }
+
+private:
+    std::map<Default, std::string> m_table;
+    std::map<Arg, std::string> m_args;
+    std::map<Val, std::string> m_vals;
+};
+
+static Defaults tkmDefaults {};
+
+} // namespace tkm::reader
