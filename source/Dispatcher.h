@@ -36,6 +36,7 @@ public:
         RequestSession,
         SetSession,
         StartStream,
+        ProcessData,
         Status,
         Quit
     };

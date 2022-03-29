@@ -20,7 +20,7 @@ namespace tkm::reader
 class Arguments
 {
 public:
-    enum class Key { Address, Port, Format };
+    enum class Key { Address, Port };
 
 public:
     explicit Arguments(const std::map<Key, std::string> &opts)

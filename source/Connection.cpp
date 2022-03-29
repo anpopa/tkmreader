@@ -75,6 +75,16 @@ Connection::Connection()
                     App()->getDispatcher()->pushRequest(rq);
                     break;
                 }
+                case tkm::msg::server::Message_Type_Data: {
+                    Dispatcher::Request rq {.action = Dispatcher::Action::ProcessData};
+                    tkm::msg::server::Data data;
+
+                    msg.payload().UnpackTo(&data);
+                    rq.bulkData = std::make_any<tkm::msg::server::Data>(data);
+
+                    App()->getDispatcher()->pushRequest(rq);
+                    break;
+                }
                 case tkm::msg::server::Message_Type_Status: {
                     Dispatcher::Request rq {.action = Dispatcher::Action::Status};
                     tkm::msg::server::Status status;

@@ -23,8 +23,7 @@ public:
     enum class Default {
         Version,
         Address,
-        Port,
-        Format
+        Port
     };
 
     enum class Arg { Id, Status, Reason, Name, RequestId, What };
@@ -36,7 +35,6 @@ public:
         m_table.insert(std::pair<Default, std::string>(Default::Version, "@GIT_SHA1@"));
         m_table.insert(std::pair<Default, std::string>(Default::Address, "localhost"));
         m_table.insert(std::pair<Default, std::string>(Default::Port, "3357"));
-        m_table.insert(std::pair<Default, std::string>(Default::Format, "json"));
 
         m_args.insert(std::pair<Arg, std::string>(Arg::Id, "Id"));
         m_args.insert(std::pair<Arg, std::string>(Arg::What, "What"));

@@ -36,7 +36,6 @@ auto main(int argc, char **argv) -> int
 
     struct option longopts[] = {{"address", required_argument, nullptr, 'a'},
                                 {"port", required_argument, nullptr, 'p'},
-                                {"format", required_argument, nullptr, 'f'},
                                 {"help", no_argument, nullptr, 'h'},
                                 {nullptr, 0, nullptr, 0}};
 
@@ -47,9 +46,6 @@ auto main(int argc, char **argv) -> int
             break;
         case 'p':
             args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Port, optarg));
-            break;
-        case 'f':
-            args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Format, optarg));
             break;
         case 'h':
             help = true;
@@ -66,7 +62,6 @@ auto main(int argc, char **argv) -> int
         cout << "  General:\n";
         cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
         cout << "     --port, -p      <int>     Device port number (default 3357)\n";
-        cout << "     --format, -f    <string>  Output stream format (default json)\n";
         cout << "  Help:\n";
         cout << "     --help, -h                Print this help\n\n";
 
@@ -81,10 +76,6 @@ auto main(int argc, char **argv) -> int
 
         Command::Request startStreamRequest {.action = Command::Action::StartStream};
         app.getCommand()->addRequest(startStreamRequest);
-
-        // The last command is to quit
-        Command::Request quitRequest {.action = Command::Action::Quit};
-        app.getCommand()->addRequest(quitRequest);
 
         // Request connection
         Dispatcher::Request connectRequest {
