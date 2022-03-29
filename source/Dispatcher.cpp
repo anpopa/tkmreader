@@ -12,10 +12,10 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <json/json.h>
 #include <ostream>
 #include <string>
 #include <unistd.h>
-#include <json/json.h>
 
 #include "Application.h"
 #include "Defaults.h"
@@ -36,7 +36,8 @@ static auto splitString(const std::string &s, char delim) -> std::vector<std::st
 static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts);
 static void printProcEvent(const tkm::msg::server::ProcEvent &event, uint64_t ts);
 static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, uint64_t ts);
-static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure, uint64_t ts);
+static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure,
+                                 uint64_t ts);
 
 static auto doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq) -> bool;
 static auto doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
@@ -103,14 +104,8 @@ static auto doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Reque
 static auto doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &) -> bool
 {
     tkm::msg::client::Descriptor descriptor;
-    char hostName[64] = {0};
 
-    gethostname(hostName, sizeof(hostName));
-    std::string instId = hostName;
-    
-    instId += "." + std::to_string(getpid());
-    descriptor.set_id(instId);
-
+    descriptor.set_id("Reader");
     if (!sendClientDescriptor(App()->getConnection()->getFD(), descriptor)) {
         logError() << "Failed to send descriptor";
         Dispatcher::Request nrq {.action = Dispatcher::Action::Quit};
@@ -173,32 +168,32 @@ static auto doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
     const auto &data = std::any_cast<tkm::msg::server::Data>(rq.bulkData);
 
     switch (data.what()) {
-        case tkm::msg::server::Data_What_ProcAcct: {
-            tkm::msg::server::ProcAcct procAcct;
-            data.payload().UnpackTo(&procAcct);
-            printProcAcct(procAcct, data.timestamp());
-            break;
-        }
-        case tkm::msg::server::Data_What_ProcEvent: {
-            tkm::msg::server::ProcEvent procEvent;
-            data.payload().UnpackTo(&procEvent);
-            printProcEvent(procEvent, data.timestamp());
-            break;
-        }
-        case tkm::msg::server::Data_What_SysProcStat: {
-            tkm::msg::server::SysProcStat sysProcStat;
-            data.payload().UnpackTo(&sysProcStat);
-            printSysProcStat(sysProcStat, data.timestamp());
-            break;
-        }
-        case tkm::msg::server::Data_What_SysProcPressure: {
-            tkm::msg::server::SysProcPressure sysProcPressure;
-            data.payload().UnpackTo(&sysProcPressure);
-            printSysProcPressure(sysProcPressure, data.timestamp());
-            break;
-        }
-        default:
-            break;
+    case tkm::msg::server::Data_What_ProcAcct: {
+        tkm::msg::server::ProcAcct procAcct;
+        data.payload().UnpackTo(&procAcct);
+        printProcAcct(procAcct, data.timestamp());
+        break;
+    }
+    case tkm::msg::server::Data_What_ProcEvent: {
+        tkm::msg::server::ProcEvent procEvent;
+        data.payload().UnpackTo(&procEvent);
+        printProcEvent(procEvent, data.timestamp());
+        break;
+    }
+    case tkm::msg::server::Data_What_SysProcStat: {
+        tkm::msg::server::SysProcStat sysProcStat;
+        data.payload().UnpackTo(&sysProcStat);
+        printSysProcStat(sysProcStat, data.timestamp());
+        break;
+    }
+    case tkm::msg::server::Data_What_SysProcPressure: {
+        tkm::msg::server::SysProcPressure sysProcPressure;
+        data.payload().UnpackTo(&sysProcPressure);
+        printSysProcPressure(sysProcPressure, data.timestamp());
+        break;
+    }
+    default:
+        break;
     }
 
     return true;
@@ -249,6 +244,9 @@ static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts)
 
     head["type"] = "acct";
     head["time"] = ts;
+    head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+    head["session"] = App()->getSession().id();
+    head["lifecycle"] = App()->getSession().lifecycleid();
 
     Json::Value common;
     common["ac_comm"] = acct.ac_comm();
@@ -316,67 +314,70 @@ static void printProcEvent(const tkm::msg::server::ProcEvent &event, uint64_t ts
 
     head["type"] = "proc";
     head["time"] = ts;
+    head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+    head["session"] = App()->getSession().id();
+    head["lifecycle"] = App()->getSession().lifecycleid();
 
     switch (event.what()) {
-        case tkm::msg::server::ProcEvent_What_Fork: {
-            tkm::msg::server::ProcEventFork forkEvent;
-            event.data().UnpackTo(&forkEvent);
+    case tkm::msg::server::ProcEvent_What_Fork: {
+        tkm::msg::server::ProcEventFork forkEvent;
+        event.data().UnpackTo(&forkEvent);
 
-            body["parent_pid"] = forkEvent.parent_pid();
-            body["parent_tgid"] = forkEvent.parent_tgid();
-            body["child_pid"] = forkEvent.child_pid();
-            body["child_tgid"] = forkEvent.child_tgid();
-            head["fork"] = body;
+        body["parent_pid"] = forkEvent.parent_pid();
+        body["parent_tgid"] = forkEvent.parent_tgid();
+        body["child_pid"] = forkEvent.child_pid();
+        body["child_tgid"] = forkEvent.child_tgid();
+        head["fork"] = body;
 
-            break;
-        }
-        case tkm::msg::server::ProcEvent_What_Exec: {
-            tkm::msg::server::ProcEventExec execEvent;
-            event.data().UnpackTo(&execEvent);
+        break;
+    }
+    case tkm::msg::server::ProcEvent_What_Exec: {
+        tkm::msg::server::ProcEventExec execEvent;
+        event.data().UnpackTo(&execEvent);
 
-            body["process_pid"] = execEvent.process_pid();
-            body["process_tgid"] = execEvent.process_tgid();
-            head["exec"] = body;
+        body["process_pid"] = execEvent.process_pid();
+        body["process_tgid"] = execEvent.process_tgid();
+        head["exec"] = body;
 
-            break;
-        }
-        case tkm::msg::server::ProcEvent_What_Exit: {
-            tkm::msg::server::ProcEventExit exitEvent;
-            event.data().UnpackTo(&exitEvent);
+        break;
+    }
+    case tkm::msg::server::ProcEvent_What_Exit: {
+        tkm::msg::server::ProcEventExit exitEvent;
+        event.data().UnpackTo(&exitEvent);
 
-            body["process_pid"] = exitEvent.process_pid();
-            body["process_tgid"] = exitEvent.process_tgid();
-            body["exit_code"] = exitEvent.exit_code();
-            head["exit"] = body;
+        body["process_pid"] = exitEvent.process_pid();
+        body["process_tgid"] = exitEvent.process_tgid();
+        body["exit_code"] = exitEvent.exit_code();
+        head["exit"] = body;
 
-            break;
-        }
-        case tkm::msg::server::ProcEvent_What_UID: {
-            tkm::msg::server::ProcEventUID uidEvent;
-            event.data().UnpackTo(&uidEvent);
+        break;
+    }
+    case tkm::msg::server::ProcEvent_What_UID: {
+        tkm::msg::server::ProcEventUID uidEvent;
+        event.data().UnpackTo(&uidEvent);
 
-            body["process_pid"] = uidEvent.process_pid();
-            body["process_tgid"] = uidEvent.process_tgid();
-            body["ruid"] = uidEvent.ruid();
-            body["euid"] = uidEvent.euid();
-            head["uid"] = body;
+        body["process_pid"] = uidEvent.process_pid();
+        body["process_tgid"] = uidEvent.process_tgid();
+        body["ruid"] = uidEvent.ruid();
+        body["euid"] = uidEvent.euid();
+        head["uid"] = body;
 
-            break;
-        }
-        case tkm::msg::server::ProcEvent_What_GID: {
-            tkm::msg::server::ProcEventGID gidEvent;
-            event.data().UnpackTo(&gidEvent);
+        break;
+    }
+    case tkm::msg::server::ProcEvent_What_GID: {
+        tkm::msg::server::ProcEventGID gidEvent;
+        event.data().UnpackTo(&gidEvent);
 
-            body["process_pid"] = gidEvent.process_pid();
-            body["process_tgid"] = gidEvent.process_tgid();
-            body["rgid"] = gidEvent.rgid();
-            body["egid"] = gidEvent.egid();
-            head["uid"] = body;
+        body["process_pid"] = gidEvent.process_pid();
+        body["process_tgid"] = gidEvent.process_tgid();
+        body["rgid"] = gidEvent.rgid();
+        body["egid"] = gidEvent.egid();
+        head["uid"] = body;
 
-            break;
-        }
-        default:
-            break;
+        break;
+    }
+    default:
+        break;
     }
 
     writeJsonStream() << head;
@@ -388,6 +389,9 @@ static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, u
 
     head["type"] = "stat";
     head["time"] = ts;
+    head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+    head["session"] = App()->getSession().id();
+    head["lifecycle"] = App()->getSession().lifecycleid();
 
     Json::Value cpu;
     cpu["all"] = sysProcStat.cpu().all();
@@ -398,12 +402,16 @@ static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, u
     writeJsonStream() << head;
 }
 
-static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure, uint64_t ts)
+static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure,
+                                 uint64_t ts)
 {
     Json::Value head;
 
     head["type"] = "psi";
     head["time"] = ts;
+    head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+    head["session"] = App()->getSession().id();
+    head["lifecycle"] = App()->getSession().lifecycleid();
 
     if (sysProcPressure.has_cpu_some() || sysProcPressure.has_cpu_full()) {
         Json::Value cpu;

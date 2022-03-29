@@ -12,9 +12,9 @@
 #include "JsonWriter.h"
 #include "../bswinfra/source/Logger.h"
 #include "Application.h"
+#include <iostream>
 #include <json/writer.h>
 #include <memory>
-#include <iostream>
 
 namespace tkm::reader
 {

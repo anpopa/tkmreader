@@ -20,7 +20,7 @@ namespace tkm::reader
 class Arguments
 {
 public:
-    enum class Key { Address, Port };
+    enum class Key { Name, Address, Port };
 
 public:
     explicit Arguments(const std::map<Key, std::string> &opts)
@@ -29,10 +29,7 @@ public:
     }
 
     auto getFor(Key key) -> std::string const;
-    bool hasFor(Key key)
-    {
-        return (m_opts.count(key) > 0);
-    }
+    bool hasFor(Key key) { return (m_opts.count(key) > 0); }
     void setFor(Key key, const std::string &opt)
     {
         m_opts.insert(std::pair<Key, std::string>(key, opt));

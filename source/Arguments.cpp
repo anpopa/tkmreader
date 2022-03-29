@@ -30,6 +30,8 @@ auto Arguments::getFor(Key key) -> string const
         return tkmDefaults.getFor(Defaults::Default::Address);
     case Key::Port:
         return tkmDefaults.getFor(Defaults::Default::Port);
+    case Key::Name:
+        return tkmDefaults.getFor(Defaults::Default::Name);
     default:
         break;
     }

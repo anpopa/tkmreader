@@ -159,11 +159,13 @@ bool sendClientDescriptor(int fd, tkm::msg::client::Descriptor &descriptor)
     codedOutput.WriteVarint32(envelopeSize);
 
     if (!envelope.SerializeToCodedStream(&codedOutput)) {
+    	logDebug() << "Serialize descriptor failed";
         return false;
     }
 
     if (send(fd, buffer, envelopeSize + sizeof(uint64_t), MSG_WAITALL)
         != (static_cast<ssize_t>(envelopeSize + sizeof(uint64_t)))) {
+        logError() << "Send failed " << strerror(errno);
         return false;
     }
 
