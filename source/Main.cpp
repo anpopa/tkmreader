@@ -60,9 +60,9 @@ auto main(int argc, char **argv) -> int
     }
 
     if (help) {
-        cout << "tmreader: read data stream from a taskmonitor device"
+        cout << "tkm-reader: read data stream from a taskmonitor device"
              << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
-        cout << "Usage: tmreader [OPTIONS] \n\n";
+        cout << "Usage: tkm-reader [OPTIONS] \n\n";
         cout << "  General:\n";
         cout << "     --name, -n      <string>  Device name (default unknown)\n";
         cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
