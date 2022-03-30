@@ -92,7 +92,7 @@ static auto doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Reque
     Dispatcher::Request rq;
 
     if (App()->getConnection()->connect() < 0) {
-        std::cout << "Connection to tkmaunchd failed" << std::endl;
+        std::cout << "Connection to taskmonitor failed" << std::endl;
         rq.action = Dispatcher::Action::Quit;
     } else {
         rq.action = Dispatcher::Action::SendDescriptor;
