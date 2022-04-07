@@ -23,76 +23,76 @@ using namespace tkm::reader;
 
 static void terminate(int signum)
 {
-    logInfo() << "Received signal " << signum;
-    exit(EXIT_SUCCESS);
+  logInfo() << "Received signal " << signum;
+  exit(EXIT_SUCCESS);
 }
 
 auto main(int argc, char **argv) -> int
 {
-    std::map<Arguments::Key, std::string> args;
-    int longIndex = 0;
-    bool help = false;
-    int c;
+  std::map<Arguments::Key, std::string> args;
+  int longIndex = 0;
+  bool help = false;
+  int c;
 
-    struct option longopts[] = {{"name", required_argument, nullptr, 'n'},
-                                {"address", required_argument, nullptr, 'a'},
-                                {"port", required_argument, nullptr, 'p'},
-                                {"help", no_argument, nullptr, 'h'},
-                                {nullptr, 0, nullptr, 0}};
+  struct option longopts[] = {{"name", required_argument, nullptr, 'n'},
+                              {"address", required_argument, nullptr, 'a'},
+                              {"port", required_argument, nullptr, 'p'},
+                              {"help", no_argument, nullptr, 'h'},
+                              {nullptr, 0, nullptr, 0}};
 
-    while ((c = getopt_long(argc, argv, "n:a:p:h", longopts, &longIndex)) != -1) {
-        switch (c) {
-        case 'n':
-            args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
-            break;
-        case 'a':
-            args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Address, optarg));
-            break;
-        case 'p':
-            args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Port, optarg));
-            break;
-        case 'h':
-            help = true;
-            break;
-        default:
-            break;
-        }
+  while ((c = getopt_long(argc, argv, "n:a:p:h", longopts, &longIndex)) != -1) {
+    switch (c) {
+    case 'n':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
+      break;
+    case 'a':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Address, optarg));
+      break;
+    case 'p':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Port, optarg));
+      break;
+    case 'h':
+      help = true;
+      break;
+    default:
+      break;
     }
+  }
 
-    if (help) {
-        cout << "tkm-reader: read data stream from a taskmonitor device"
-             << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
-        cout << "Usage: tkm-reader [OPTIONS] \n\n";
-        cout << "  General:\n";
-        cout << "     --name, -n      <string>  Device name (default unknown)\n";
-        cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
-        cout << "     --port, -p      <int>     Device port number (default 3357)\n";
-        cout << "  Help:\n";
-        cout << "     --help, -h                Print this help\n\n";
+  if (help) {
+    cout << "tkm-reader: read data stream from a taskmonitor device"
+         << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
+    cout << "Usage: tkm-reader [OPTIONS] \n\n";
+    cout << "  General:\n";
+    cout << "     --name, -n      <string>  Device name (default unknown)\n";
+    cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
+    cout << "     --port, -p      <int>     Device port number (default 3357)\n";
+    cout << "  Help:\n";
+    cout << "     --help, -h                Print this help\n\n";
 
-        exit(EXIT_SUCCESS);
-    }
+    exit(EXIT_SUCCESS);
+  }
 
-    signal(SIGINT, terminate);
-    signal(SIGTERM, terminate);
+  signal(SIGINT, terminate);
+  signal(SIGTERM, terminate);
 
-    try {
-        Application app {"TMC", "TaskMonitor Reader", args};
+  try {
+    Application app{"TMC", "TaskMonitor Reader", args};
 
-        Command::Request startStreamRequest {.action = Command::Action::StartStream};
-        app.getCommand()->addRequest(startStreamRequest);
+    Command::Request startStreamRequest{.action = Command::Action::StartStream};
+    app.getCommand()->addRequest(startStreamRequest);
 
-        // Request connection
-        Dispatcher::Request connectRequest {
-            .action = Dispatcher::Action::Connect,
-        };
-        app.getDispatcher()->pushRequest(connectRequest);
+    // Request connection
+    Dispatcher::Request connectRequest{
+        .action = Dispatcher::Action::Connect,
+    };
+    app.getDispatcher()->pushRequest(connectRequest);
 
-        app.run();
-    } catch (std::exception &e) {
-        cout << "Application start failed. " << e.what() << endl;
-        return EXIT_FAILURE;
-    }
+    app.run();
+  } catch (std::exception &e) {
+    cout << "Application start failed. " << e.what() << endl;
+    return EXIT_FAILURE;
+  }
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }

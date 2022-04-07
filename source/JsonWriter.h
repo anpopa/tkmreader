@@ -22,43 +22,43 @@ namespace tkm::reader
 class JsonWriter
 {
 public:
-    static JsonWriter *getInstance() { return (!instance) ? instance = new JsonWriter : instance; }
+  static JsonWriter *getInstance() { return (!instance) ? instance = new JsonWriter : instance; }
 
-    struct Payload {
-        Payload() = default;
-        ~Payload() { print(); }
+  struct Payload {
+    Payload() = default;
+    ~Payload() { print(); }
 
-        template <class T>
-        Payload &operator<<(const T &val)
-        {
-            const std::unique_ptr<Json::StreamWriter> writer(
-                JsonWriter::getInstance()->builder.newStreamWriter());
-            writer->write(val, &m_stream);
-            return *this;
-        }
+    template <class T>
+    Payload &operator<<(const T &val)
+    {
+      const std::unique_ptr<Json::StreamWriter> writer(
+          JsonWriter::getInstance()->builder.newStreamWriter());
+      writer->write(val, &m_stream);
+      return *this;
+    }
 
-        void print();
+    void print();
 
-    private:
-        std::ostringstream m_stream;
-        friend class JsonWriter;
-    };
+  private:
+    std::ostringstream m_stream;
+    friend class JsonWriter;
+  };
 
-    static Payload write() { return Payload {}; }
-
-public:
-    Json::StreamWriterBuilder builder;
+  static Payload write() { return Payload{}; }
 
 public:
-    JsonWriter(JsonWriter const &) = delete;
-    void operator=(JsonWriter const &) = delete;
+  Json::StreamWriterBuilder builder;
+
+public:
+  JsonWriter(JsonWriter const &) = delete;
+  void operator=(JsonWriter const &) = delete;
 
 private:
-    JsonWriter();
-    ~JsonWriter() = default;
+  JsonWriter();
+  ~JsonWriter() = default;
 
 private:
-    static JsonWriter *instance;
+  static JsonWriter *instance;
 };
 
 } // namespace tkm::reader

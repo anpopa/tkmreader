@@ -32,36 +32,36 @@ namespace tkm::reader
 class Connection final : public Pollable, public std::enable_shared_from_this<Connection>
 {
 public:
-    Connection();
-    ~Connection();
+  Connection();
+  ~Connection();
 
 public:
-    Connection(Connection const &) = delete;
-    void operator=(Connection const &) = delete;
+  Connection(Connection const &) = delete;
+  void operator=(Connection const &) = delete;
 
-    void enableEvents();
-    auto connect() -> int;
-    [[nodiscard]] int getFD() const { return m_sockFd; }
-    auto getShared() -> std::shared_ptr<Connection> { return shared_from_this(); }
+  void enableEvents();
+  auto connect() -> int;
+  [[nodiscard]] int getFD() const { return m_sockFd; }
+  auto getShared() -> std::shared_ptr<Connection> { return shared_from_this(); }
 
-    auto readEnvelope(tkm::msg::Envelope &envelope) -> IAsyncEnvelope::Status
-    {
-        return m_reader->next(envelope);
+  auto readEnvelope(tkm::msg::Envelope &envelope) -> IAsyncEnvelope::Status
+  {
+    return m_reader->next(envelope);
+  }
+
+  bool writeEnvelope(const tkm::msg::Envelope &envelope)
+  {
+    if (m_writer->send(envelope) == IAsyncEnvelope::Status::Ok) {
+      return m_writer->flush();
     }
-
-    auto writeEnvelope(const tkm::msg::Envelope &envelope) -> bool
-    {
-        if (m_writer->send(envelope) == IAsyncEnvelope::Status::Ok) {
-            return m_writer->flush();
-        }
-        return true;
-    }
+    return true;
+  }
 
 private:
-    std::unique_ptr<EnvelopeReader> m_reader = nullptr;
-    std::unique_ptr<EnvelopeWriter> m_writer = nullptr;
-    struct sockaddr_in m_addr = {};
-    int m_sockFd = -1;
+  std::unique_ptr<EnvelopeReader> m_reader = nullptr;
+  std::unique_ptr<EnvelopeWriter> m_writer = nullptr;
+  struct sockaddr_in m_addr = {};
+  int m_sockFd = -1;
 };
 
 } // namespace tkm::reader

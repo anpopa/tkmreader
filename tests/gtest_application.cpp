@@ -24,38 +24,37 @@ using namespace tkm::monitor;
 class GTestApplication : public ::testing::Test
 {
 protected:
-    GTestApplication();
-    virtual ~GTestApplication();
+  GTestApplication();
+  virtual ~GTestApplication();
 
-    virtual void SetUp();
-    virtual void TearDown();
+  virtual void SetUp();
+  virtual void TearDown();
 
 protected:
-    unique_ptr<Application> m_app;
+  unique_ptr<Application> m_app;
 };
 
 GTestApplication::GTestApplication()
 {
-    std::map<Arguments::Key, std::string> args;
-    m_app = make_unique<Application>(
-        "TMC", "TaskMonitorClient Application", args);
+  std::map<Arguments::Key, std::string> args;
+  m_app = make_unique<Application>("TMC", "TaskMonitorClient Application", args);
 }
 
-GTestApplication::~GTestApplication() { }
+GTestApplication::~GTestApplication() {}
 
-void GTestApplication::SetUp() { }
+void GTestApplication::SetUp() {}
 
-void GTestApplication::TearDown() { }
+void GTestApplication::TearDown() {}
 
 TEST_F(GTestApplication, parse)
 {
-    if (TaskMonitor()->hasConfigFile()) {
-        TaskMonitor()->getConfigFile()->printStdOutput();
-    }
+  if (TaskMonitor()->hasConfigFile()) {
+    TaskMonitor()->getConfigFile()->printStdOutput();
+  }
 }
 
 int main(int argc, char **argv)
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

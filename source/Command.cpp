@@ -16,40 +16,40 @@ namespace tkm::reader
 Command::Command()
 : UserEvent("Command")
 {
-    setCallback([this]() {
-        if (m_requests.empty()) {
-            Dispatcher::Request rq {.action = Dispatcher::Action::Quit};
-            App()->getDispatcher()->pushRequest(rq);
-            return false;
-        }
+  setCallback([this]() {
+    if (m_requests.empty()) {
+      Dispatcher::Request rq{.action = Dispatcher::Action::Quit};
+      App()->getDispatcher()->pushRequest(rq);
+      return false;
+    }
 
-        auto request = m_requests.front();
+    auto request = m_requests.front();
 
-        switch (request.action) {
-        case Command::Action::StartStream: {
-            Dispatcher::Request rq {.action = Dispatcher::Action::StartStream};
-            App()->getDispatcher()->pushRequest(rq);
-            break;
-        }
-        case Command::Action::Quit: {
-            Dispatcher::Request rq {.action = Dispatcher::Action::Quit};
-            App()->getDispatcher()->pushRequest(rq);
-            break;
-        }
-        default:
-            logError() << "Unknown command request";
-            break;
-        }
+    switch (request.action) {
+    case Command::Action::StartStream: {
+      Dispatcher::Request rq{.action = Dispatcher::Action::StartStream};
+      App()->getDispatcher()->pushRequest(rq);
+      break;
+    }
+    case Command::Action::Quit: {
+      Dispatcher::Request rq{.action = Dispatcher::Action::Quit};
+      App()->getDispatcher()->pushRequest(rq);
+      break;
+    }
+    default:
+      logError() << "Unknown command request";
+      break;
+    }
 
-        m_requests.pop_front();
+    m_requests.pop_front();
 
-        return true;
-    });
+    return true;
+  });
 }
 
 void Command::enableEvents()
 {
-    App()->addEventSource(getShared());
+  App()->addEventSource(getShared());
 }
 
 } // namespace tkm::reader

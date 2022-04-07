@@ -23,13 +23,13 @@ JsonWriter *JsonWriter::instance = nullptr;
 
 JsonWriter::JsonWriter()
 {
-    builder["commentStyle"] = "None";
-    builder["indentation"] = "";
+  builder["commentStyle"] = "None";
+  builder["indentation"] = "";
 }
 
 void JsonWriter::Payload::print()
 {
-    std::cout << m_stream.str() << std::endl;
+  std::cout << m_stream.str() << std::endl;
 }
 
 } // namespace tkm::reader

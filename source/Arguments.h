@@ -20,23 +20,23 @@ namespace tkm::reader
 class Arguments
 {
 public:
-    enum class Key { Name, Address, Port };
+  enum class Key { Name, Address, Port };
 
 public:
-    explicit Arguments(const std::map<Key, std::string> &opts)
-    {
-        m_opts.insert(opts.begin(), opts.end());
-    }
+  explicit Arguments(const std::map<Key, std::string> &opts)
+  {
+    m_opts.insert(opts.begin(), opts.end());
+  }
 
-    auto getFor(Key key) -> std::string const;
-    bool hasFor(Key key) { return (m_opts.count(key) > 0); }
-    void setFor(Key key, const std::string &opt)
-    {
-        m_opts.insert(std::pair<Key, std::string>(key, opt));
-    }
+  auto getFor(Key key) -> std::string const;
+  bool hasFor(Key key) { return (m_opts.count(key) > 0); }
+  void setFor(Key key, const std::string &opt)
+  {
+    m_opts.insert(std::pair<Key, std::string>(key, opt));
+  }
 
 private:
-    std::map<Key, std::string> m_opts;
+  std::map<Key, std::string> m_opts;
 };
 
 } // namespace tkm::reader

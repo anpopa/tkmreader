@@ -23,21 +23,21 @@ Application::Application(const string &name,
                          const std::map<Arguments::Key, std::string> &args)
 : bswi::app::IApplication(name, description)
 {
-    if (Application::appInstance != nullptr) {
-        throw bswi::except::SingleInstance();
-    }
-    appInstance = this;
+  if (Application::appInstance != nullptr) {
+    throw bswi::except::SingleInstance();
+  }
+  appInstance = this;
 
-    m_arguments = std::make_shared<Arguments>(args);
+  m_arguments = std::make_shared<Arguments>(args);
 
-    m_connection = std::make_shared<Connection>();
-    m_connection->enableEvents();
+  m_connection = std::make_shared<Connection>();
+  m_connection->enableEvents();
 
-    m_dispatcher = std::make_unique<Dispatcher>();
-    m_dispatcher->enableEvents();
+  m_dispatcher = std::make_unique<Dispatcher>();
+  m_dispatcher->enableEvents();
 
-    m_command = std::make_unique<Command>();
-    m_command->enableEvents();
+  m_command = std::make_unique<Command>();
+  m_command->enableEvents();
 }
 
 } // namespace tkm::reader
