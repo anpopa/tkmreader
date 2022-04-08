@@ -391,6 +391,7 @@ static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, u
   head["lifecycle"] = App()->getSession().lifecycleid();
 
   Json::Value cpu;
+  cpu["name"] = sysProcStat.cpu().name();
   cpu["all"] = sysProcStat.cpu().all();
   cpu["usr"] = sysProcStat.cpu().usr();
   cpu["sys"] = sysProcStat.cpu().sys();
