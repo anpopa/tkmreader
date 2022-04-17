@@ -38,6 +38,8 @@ static void printProcEvent(const tkm::msg::server::ProcEvent &event, uint64_t ts
 static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, uint64_t ts);
 static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure,
                                  uint64_t ts);
+static void printSysProcMeminfo(const tkm::msg::server::SysProcMeminfo &sysProcMeminfo,
+                                uint64_t ts);
 
 static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
 static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
@@ -181,6 +183,12 @@ static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
     tkm::msg::server::SysProcStat sysProcStat;
     data.payload().UnpackTo(&sysProcStat);
     printSysProcStat(sysProcStat, data.timestamp());
+    break;
+  }
+  case tkm::msg::server::Data_What_SysProcMeminfo: {
+    tkm::msg::server::SysProcMeminfo sysProcMeminfo;
+    data.payload().UnpackTo(&sysProcMeminfo);
+    printSysProcMeminfo(sysProcMeminfo, data.timestamp());
     break;
   }
   case tkm::msg::server::Data_What_SysProcPressure: {
@@ -396,6 +404,31 @@ static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, u
   cpu["usr"] = sysProcStat.cpu().usr();
   cpu["sys"] = sysProcStat.cpu().sys();
   head["cpu"] = cpu;
+
+  writeJsonStream() << head;
+}
+
+static void printSysProcMeminfo(const tkm::msg::server::SysProcMeminfo &sysProcMeminfo, uint64_t ts)
+{
+  Json::Value head;
+
+  head["type"] = "meminfo";
+  head["time"] = ts;
+  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+  head["session"] = App()->getSession().id();
+  head["lifecycle"] = App()->getSession().lifecycleid();
+
+  Json::Value meminfo;
+  meminfo["mem_total"] = sysProcMeminfo.mem_total();
+  meminfo["mem_free"] = sysProcMeminfo.mem_free();
+  meminfo["mem_available"] = sysProcMeminfo.mem_available();
+  meminfo["mem_cached"] = sysProcMeminfo.mem_cached();
+  meminfo["mem_available_percent"] = sysProcMeminfo.mem_percent();
+  meminfo["swap_total"] = sysProcMeminfo.swap_total();
+  meminfo["swap_free"] = sysProcMeminfo.swap_free();
+  meminfo["swap_cached"] = sysProcMeminfo.swap_cached();
+  meminfo["swap_free_percent"] = sysProcMeminfo.swap_percent();
+  head["meminfo"] = meminfo;
 
   writeJsonStream() << head;
 }
