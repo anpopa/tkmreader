@@ -261,8 +261,7 @@ static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts)
   common["ac_ppid"] = acct.ac_ppid();
   common["ac_utime"] = acct.ac_utime();
   common["ac_stime"] = acct.ac_stime();
-  common["user_cpu_percent"] = acct.user_cpu_percent();
-  common["sys_cpu_percent"] = acct.sys_cpu_percent();
+  common["cpu_percent"] = acct.cpu_percent();
   head["common"] = common;
 
   Json::Value cpu;
@@ -295,6 +294,12 @@ static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts)
   io["blkio_count"] = acct.io().blkio_count();
   io["blkio_delay_total"] = acct.io().blkio_delay_total();
   io["blkio_delay_average"] = acct.io().blkio_delay_average();
+  io["read_bytes"] = acct.io().read_bytes();
+  io["write_bytes"] = acct.io().write_bytes();
+  io["read_char"] = acct.io().read_char();
+  io["write_char"] = acct.io().write_char();
+  io["read_syscalls"] = acct.io().read_syscalls();
+  io["write_syscalls"] = acct.io().write_syscalls();
   head["io"] = io;
 
   Json::Value reclaim;
