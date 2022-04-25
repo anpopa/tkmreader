@@ -20,7 +20,7 @@
 #include "Defaults.h"
 #include "Helpers.h"
 
-#include "Server.pb.h"
+#include "Monitor.pb.h"
 
 namespace fs = std::filesystem;
 
@@ -57,40 +57,40 @@ Connection::Connection()
           }
 
           // Check for valid origin
-          if (envelope.origin() != tkm::msg::Envelope_Recipient_Server) {
+          if (envelope.origin() != tkm::msg::Envelope_Recipient_Monitor) {
             continue;
           }
 
-          tkm::msg::server::Message msg;
+          tkm::msg::monitor::Message msg;
           envelope.mesg().UnpackTo(&msg);
 
           switch (msg.type()) {
-          case tkm::msg::server::Message_Type_SetSession: {
+          case tkm::msg::monitor::Message_Type_SetSession: {
             Dispatcher::Request rq{.action = Dispatcher::Action::SetSession};
-            tkm::msg::server::SessionInfo sessionInfo;
+            tkm::msg::monitor::SessionInfo sessionInfo;
 
             msg.payload().UnpackTo(&sessionInfo);
-            rq.bulkData = std::make_any<tkm::msg::server::SessionInfo>(sessionInfo);
+            rq.bulkData = std::make_any<tkm::msg::monitor::SessionInfo>(sessionInfo);
 
             App()->getDispatcher()->pushRequest(rq);
             break;
           }
-          case tkm::msg::server::Message_Type_Data: {
+          case tkm::msg::monitor::Message_Type_Data: {
             Dispatcher::Request rq{.action = Dispatcher::Action::ProcessData};
-            tkm::msg::server::Data data;
+            tkm::msg::monitor::Data data;
 
             msg.payload().UnpackTo(&data);
-            rq.bulkData = std::make_any<tkm::msg::server::Data>(data);
+            rq.bulkData = std::make_any<tkm::msg::monitor::Data>(data);
 
             App()->getDispatcher()->pushRequest(rq);
             break;
           }
-          case tkm::msg::server::Message_Type_Status: {
+          case tkm::msg::monitor::Message_Type_Status: {
             Dispatcher::Request rq{.action = Dispatcher::Action::Status};
-            tkm::msg::server::Status status;
+            tkm::msg::monitor::Status status;
 
             msg.payload().UnpackTo(&status);
-            rq.bulkData = std::make_any<tkm::msg::server::Status>(status);
+            rq.bulkData = std::make_any<tkm::msg::monitor::Status>(status);
 
             App()->getDispatcher()->pushRequest(rq);
             break;
@@ -112,7 +112,7 @@ Connection::Connection()
   setPrepare([]() { return false; });
   // If the event is removed we stop the main application
   setFinalize([]() {
-    logInfo() << "Server closed connection. Terminate";
+    logInfo() << "Monitor closed connection. Terminate";
     Dispatcher::Request nrq{.action = Dispatcher::Action::Quit};
     App()->getDispatcher()->pushRequest(nrq);
   });
@@ -132,11 +132,11 @@ Connection::~Connection()
 
 auto Connection::connect() -> int
 {
-  std::string serverAddress = App()->getArguments()->getFor(Arguments::Key::Address);
-  struct hostent *server = gethostbyname(serverAddress.c_str());
+  std::string monitorAddress = App()->getArguments()->getFor(Arguments::Key::Address);
+  struct hostent *monitor = gethostbyname(monitorAddress.c_str());
 
   m_addr.sin_family = AF_INET;
-  bcopy(server->h_addr, (char *) &m_addr.sin_addr.s_addr, (size_t) server->h_length);
+  bcopy(monitor->h_addr, (char *) &m_addr.sin_addr.s_addr, (size_t) monitor->h_length);
   auto port = std::stoi(tkmDefaults.getFor(Defaults::Default::Port));
   try {
     port = std::stoi(App()->getArguments()->getFor(Arguments::Key::Port));
@@ -184,13 +184,13 @@ auto Connection::connect() -> int
         }
       }
     } else {
-      logError() << "Failed to connect to server: " << strerror(errno);
+      logError() << "Failed to connect to monitor: " << strerror(errno);
       return -1;
     }
   }
 
   // We are ready to process events
-  logInfo() << "Connected to server";
+  logInfo() << "Connected to monitor";
   setPrepare([]() { return true; });
 
   return 0;

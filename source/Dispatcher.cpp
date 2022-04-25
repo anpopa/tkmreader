@@ -23,8 +23,8 @@
 #include "Helpers.h"
 #include "JsonWriter.h"
 
-#include "Client.pb.h"
-#include "Server.pb.h"
+#include "Collector.pb.h"
+#include "Monitor.pb.h"
 
 using std::shared_ptr;
 using std::string;
@@ -33,13 +33,20 @@ namespace tkm::reader
 {
 
 static auto splitString(const std::string &s, char delim) -> std::vector<std::string>;
-static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts);
-static void printProcEvent(const tkm::msg::server::ProcEvent &event, uint64_t ts);
-static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, uint64_t ts);
-static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure,
-                                 uint64_t ts);
-static void printSysProcMeminfo(const tkm::msg::server::SysProcMeminfo &sysProcMeminfo,
-                                uint64_t ts);
+static void
+printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint64_t monotonicTime);
+static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
+                           uint64_t systemTime,
+                           uint64_t monotonicTime);
+static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
+                             uint64_t systemTime,
+                             uint64_t monotonicTime);
+static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysProcPressure,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime);
+static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProcMeminfo,
+                                uint64_t systemTime,
+                                uint64_t monotonicTime);
 
 static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
 static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
@@ -103,15 +110,15 @@ static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Reque
 
 static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
 {
-  tkm::msg::client::Descriptor descriptor;
+  tkm::msg::collector::Descriptor descriptor;
 
   descriptor.set_id("Reader");
-  if (!sendClientDescriptor(App()->getConnection()->getFD(), descriptor)) {
+  if (!sendCollectorDescriptor(App()->getConnection()->getFD(), descriptor)) {
     logError() << "Failed to send descriptor";
     Dispatcher::Request nrq{.action = Dispatcher::Action::Quit};
     return mgr->pushRequest(nrq);
   }
-  logDebug() << "Sent client descriptor";
+  logDebug() << "Sent collector descriptor";
 
   Dispatcher::Request nrq{.action = Dispatcher::Action::RequestSession};
   return mgr->pushRequest(nrq);
@@ -120,24 +127,24 @@ static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher
 static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
 {
   tkm::msg::Envelope envelope;
-  tkm::msg::client::Request request;
+  tkm::msg::collector::Request request;
 
   request.set_id("CreateSession");
-  request.set_type(tkm::msg::client::Request::Type::Request_Type_CreateSession);
+  request.set_type(tkm::msg::collector::Request::Type::Request_Type_CreateSession);
 
   envelope.mutable_mesg()->PackFrom(request);
-  envelope.set_target(tkm::msg::Envelope_Recipient_Server);
-  envelope.set_origin(tkm::msg::Envelope_Recipient_Client);
+  envelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+  envelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
 
-  logDebug() << "Request session to server";
+  logDebug() << "Request session to monitor";
   return App()->getConnection()->writeEnvelope(envelope);
 }
 
 static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
 {
-  const auto &sessionInfo = std::any_cast<tkm::msg::server::SessionInfo>(rq.bulkData);
+  const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
 
-  logDebug() << "Server accepted: " << sessionInfo.id();
+  logDebug() << "Monitor accepted: " << sessionInfo.id();
   App()->getSession() = sessionInfo;
 
   return App()->getCommand()->trigger();
@@ -145,56 +152,106 @@ static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Re
 
 static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
 {
-  tkm::msg::Envelope requestEnvelope;
-  tkm::msg::client::Request requestMessage;
-  tkm::msg::client::StreamState streamState;
+  // ProcAcct timer
+  auto procAcctTimer = std::make_shared<Timer>("ProcAcctTimer", [&mgr]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
 
-  streamState.set_state(true);
-  requestMessage.set_id("StartStream");
-  requestMessage.set_type(tkm::msg::client::Request_Type_StreamState);
-  requestMessage.mutable_data()->PackFrom(streamState);
+    requestMessage.set_id("GetProcAcct");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcAcct);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
 
-  requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-  requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Server);
-  requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Client);
+    return App()->getConnection()->writeEnvelope(requestEnvelope);
+  });
+  procAcctTimer->start(App()->getSession().proc_acct_poll_interval(), true);
+  App()->addEventSource(procAcctTimer);
 
-  logDebug() << "Request start stream";
-  return App()->getConnection()->writeEnvelope(requestEnvelope);
+  // SysProcStat timer
+  auto sysProcStatTimer = std::make_shared<Timer>("SysProcStatTimer", [&mgr]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    requestMessage.set_id("GetSysProcStat");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcStat);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return App()->getConnection()->writeEnvelope(requestEnvelope);
+  });
+  sysProcStatTimer->start(App()->getSession().sys_proc_stat_poll_interval(), true);
+  App()->addEventSource(sysProcStatTimer);
+
+  // SysProcMemInfo timer
+  auto sysProcMemInfoTimer = std::make_shared<Timer>("SysProcMemInfoTimer", [&mgr]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    requestMessage.set_id("GetSysProcMemInfo");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcMeminfo);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return App()->getConnection()->writeEnvelope(requestEnvelope);
+  });
+  sysProcMemInfoTimer->start(App()->getSession().sys_proc_meminfo_poll_interval(), true);
+  App()->addEventSource(sysProcMemInfoTimer);
+
+  // SysProcPressure timer
+  auto sysProcPressureTimer = std::make_shared<Timer>("SysProcPressureTimer", [&mgr]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    requestMessage.set_id("GetSysProcPressure");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcPressure);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return App()->getConnection()->writeEnvelope(requestEnvelope);
+  });
+  sysProcPressureTimer->start(App()->getSession().sys_proc_pressure_poll_interval(), true);
+  App()->addEventSource(sysProcPressureTimer);
+
+  return true;
 }
 
 static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
 {
-  const auto &data = std::any_cast<tkm::msg::server::Data>(rq.bulkData);
+  const auto &data = std::any_cast<tkm::msg::monitor::Data>(rq.bulkData);
 
   switch (data.what()) {
-  case tkm::msg::server::Data_What_ProcAcct: {
-    tkm::msg::server::ProcAcct procAcct;
+  case tkm::msg::monitor::Data_What_ProcAcct: {
+    tkm::msg::monitor::ProcAcct procAcct;
     data.payload().UnpackTo(&procAcct);
-    printProcAcct(procAcct, data.timestamp());
+    printProcAcct(procAcct, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
-  case tkm::msg::server::Data_What_ProcEvent: {
-    tkm::msg::server::ProcEvent procEvent;
+  case tkm::msg::monitor::Data_What_ProcEvent: {
+    tkm::msg::monitor::ProcEvent procEvent;
     data.payload().UnpackTo(&procEvent);
-    printProcEvent(procEvent, data.timestamp());
+    printProcEvent(procEvent, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
-  case tkm::msg::server::Data_What_SysProcStat: {
-    tkm::msg::server::SysProcStat sysProcStat;
+  case tkm::msg::monitor::Data_What_SysProcStat: {
+    tkm::msg::monitor::SysProcStat sysProcStat;
     data.payload().UnpackTo(&sysProcStat);
-    printSysProcStat(sysProcStat, data.timestamp());
+    printSysProcStat(sysProcStat, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
-  case tkm::msg::server::Data_What_SysProcMeminfo: {
-    tkm::msg::server::SysProcMeminfo sysProcMeminfo;
+  case tkm::msg::monitor::Data_What_SysProcMeminfo: {
+    tkm::msg::monitor::SysProcMeminfo sysProcMeminfo;
     data.payload().UnpackTo(&sysProcMeminfo);
-    printSysProcMeminfo(sysProcMeminfo, data.timestamp());
+    printSysProcMeminfo(sysProcMeminfo, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
-  case tkm::msg::server::Data_What_SysProcPressure: {
-    tkm::msg::server::SysProcPressure sysProcPressure;
+  case tkm::msg::monitor::Data_What_SysProcPressure: {
+    tkm::msg::monitor::SysProcPressure sysProcPressure;
     data.payload().UnpackTo(&sysProcPressure);
-    printSysProcPressure(sysProcPressure, data.timestamp());
+    printSysProcPressure(sysProcPressure, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
   default:
@@ -206,31 +263,31 @@ static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
 static bool doStatus(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
 {
-  const auto &serverStatus = std::any_cast<tkm::msg::server::Status>(rq.bulkData);
+  const auto &monitorStatus = std::any_cast<tkm::msg::monitor::Status>(rq.bulkData);
   std::string what;
 
-  switch (serverStatus.what()) {
-  case tkm::msg::server::Status_What_OK:
+  switch (monitorStatus.what()) {
+  case tkm::msg::monitor::Status_What_OK:
     what = tkmDefaults.valFor(tkm::reader::Defaults::Val::StatusOkay);
     break;
-  case tkm::msg::server::Status_What_Busy:
+  case tkm::msg::monitor::Status_What_Busy:
     what = tkmDefaults.valFor(tkm::reader::Defaults::Val::StatusBusy);
     break;
-  case tkm::msg::server::Status_What_Error:
+  case tkm::msg::monitor::Status_What_Error:
   default:
     what = tkmDefaults.valFor(tkm::reader::Defaults::Val::StatusError);
     break;
   }
 
-  logDebug() << "Server status (" << serverStatus.requestid() << "): " << what
-             << " Reason: " << serverStatus.reason();
-  if ((serverStatus.requestid() == "RequestSession") &&
-      (serverStatus.what() == tkm::msg::server::Status_What_OK)) {
+  logDebug() << "Monitor status (" << monitorStatus.request_id() << "): " << what
+             << " Reason: " << monitorStatus.reason();
+  if ((monitorStatus.request_id() == "RequestSession") &&
+      (monitorStatus.what() == tkm::msg::monitor::Status_What_OK)) {
     return true;
   }
 
   std::cout << "--------------------------------------------------" << std::endl;
-  std::cout << "Status: " << what << " Reason: " << serverStatus.reason() << std::endl;
+  std::cout << "Status: " << what << " Reason: " << monitorStatus.reason() << std::endl;
   std::cout << "--------------------------------------------------" << std::endl;
 
   // Trigger the next command
@@ -243,15 +300,18 @@ static bool doQuit(const shared_ptr<Dispatcher> &, const Dispatcher::Request &)
   exit(EXIT_SUCCESS);
 }
 
-static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts)
+static void
+printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint64_t monotonicTime)
 {
   Json::Value head;
 
   head["type"] = "acct";
-  head["time"] = ts;
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycleid();
+  head["lifecycle"] = App()->getSession().lifecycle_id();
 
   Json::Value common;
   common["ac_comm"] = acct.ac_comm();
@@ -317,91 +377,44 @@ static void printProcAcct(const tkm::msg::server::ProcAcct &acct, uint64_t ts)
   writeJsonStream() << head;
 }
 
-static void printProcEvent(const tkm::msg::server::ProcEvent &event, uint64_t ts)
+static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
+                           uint64_t systemTime,
+                           uint64_t monotonicTime)
 {
   Json::Value head;
   Json::Value body;
 
   head["type"] = "proc";
-  head["time"] = ts;
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycleid();
+  head["lifecycle"] = App()->getSession().lifecycle_id();
 
-  switch (event.what()) {
-  case tkm::msg::server::ProcEvent_What_Fork: {
-    tkm::msg::server::ProcEventFork forkEvent;
-    event.data().UnpackTo(&forkEvent);
-
-    body["parent_pid"] = forkEvent.parent_pid();
-    body["parent_tgid"] = forkEvent.parent_tgid();
-    body["child_pid"] = forkEvent.child_pid();
-    body["child_tgid"] = forkEvent.child_tgid();
-    head["fork"] = body;
-
-    break;
-  }
-  case tkm::msg::server::ProcEvent_What_Exec: {
-    tkm::msg::server::ProcEventExec execEvent;
-    event.data().UnpackTo(&execEvent);
-
-    body["process_pid"] = execEvent.process_pid();
-    body["process_tgid"] = execEvent.process_tgid();
-    head["exec"] = body;
-
-    break;
-  }
-  case tkm::msg::server::ProcEvent_What_Exit: {
-    tkm::msg::server::ProcEventExit exitEvent;
-    event.data().UnpackTo(&exitEvent);
-
-    body["process_pid"] = exitEvent.process_pid();
-    body["process_tgid"] = exitEvent.process_tgid();
-    body["exit_code"] = exitEvent.exit_code();
-    head["exit"] = body;
-
-    break;
-  }
-  case tkm::msg::server::ProcEvent_What_UID: {
-    tkm::msg::server::ProcEventUID uidEvent;
-    event.data().UnpackTo(&uidEvent);
-
-    body["process_pid"] = uidEvent.process_pid();
-    body["process_tgid"] = uidEvent.process_tgid();
-    body["ruid"] = uidEvent.ruid();
-    body["euid"] = uidEvent.euid();
-    head["uid"] = body;
-
-    break;
-  }
-  case tkm::msg::server::ProcEvent_What_GID: {
-    tkm::msg::server::ProcEventGID gidEvent;
-    event.data().UnpackTo(&gidEvent);
-
-    body["process_pid"] = gidEvent.process_pid();
-    body["process_tgid"] = gidEvent.process_tgid();
-    body["rgid"] = gidEvent.rgid();
-    body["egid"] = gidEvent.egid();
-    head["uid"] = body;
-
-    break;
-  }
-  default:
-    break;
-  }
+  body["fork_count"] = event.fork_count();
+  body["exec_count"] = event.exec_count();
+  body["exit_count"] = event.exit_count();
+  body["uid_count"] = event.uid_count();
+  body["gid_count"] = event.gid_count();
+  head["fork"] = body;
 
   writeJsonStream() << head;
 }
 
-static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, uint64_t ts)
+static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
+                             uint64_t systemTime,
+                             uint64_t monotonicTime)
 {
   Json::Value head;
 
   head["type"] = "stat";
-  head["time"] = ts;
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycleid();
+  head["lifecycle"] = App()->getSession().lifecycle_id();
 
   Json::Value cpu;
   cpu["name"] = sysProcStat.cpu().name();
@@ -413,15 +426,19 @@ static void printSysProcStat(const tkm::msg::server::SysProcStat &sysProcStat, u
   writeJsonStream() << head;
 }
 
-static void printSysProcMeminfo(const tkm::msg::server::SysProcMeminfo &sysProcMeminfo, uint64_t ts)
+static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProcMeminfo,
+                                uint64_t systemTime,
+                                uint64_t monotonicTime)
 {
   Json::Value head;
 
   head["type"] = "meminfo";
-  head["time"] = ts;
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycleid();
+  head["lifecycle"] = App()->getSession().lifecycle_id();
 
   Json::Value meminfo;
   meminfo["mem_total"] = sysProcMeminfo.mem_total();
@@ -438,16 +455,19 @@ static void printSysProcMeminfo(const tkm::msg::server::SysProcMeminfo &sysProcM
   writeJsonStream() << head;
 }
 
-static void printSysProcPressure(const tkm::msg::server::SysProcPressure &sysProcPressure,
-                                 uint64_t ts)
+static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysProcPressure,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime)
 {
   Json::Value head;
 
   head["type"] = "psi";
-  head["time"] = ts;
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycleid();
+  head["lifecycle"] = App()->getSession().lifecycle_id();
 
   if (sysProcPressure.has_cpu_some() || sysProcPressure.has_cpu_full()) {
     Json::Value cpu;

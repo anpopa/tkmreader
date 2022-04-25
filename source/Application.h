@@ -34,8 +34,8 @@
 #include "../bswinfra/source/Timer.h"
 #include "../bswinfra/source/UserEvent.h"
 
-#include "Client.pb.h"
-#include "Server.pb.h"
+#include "Collector.pb.h"
+#include "Monitor.pb.h"
 
 namespace tkm::reader
 {
@@ -68,7 +68,7 @@ public:
     }
   }
 
-  auto getSession() -> tkm::msg::server::SessionInfo & { return m_session; }
+  auto getSession() -> tkm::msg::monitor::SessionInfo & { return m_session; }
   auto getDispatcher() -> std::shared_ptr<Dispatcher> { return m_dispatcher; }
   auto getCommand() -> std::shared_ptr<Command> { return m_command; }
   auto getConnection() -> std::shared_ptr<Connection> { return m_connection; }
@@ -85,7 +85,7 @@ private:
   std::shared_ptr<Dispatcher> m_dispatcher = nullptr;
 
 private:
-  tkm::msg::server::SessionInfo m_session{};
+  tkm::msg::monitor::SessionInfo m_session{};
   static Application *appInstance;
 };
 
