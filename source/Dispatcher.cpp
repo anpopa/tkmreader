@@ -147,6 +147,11 @@ static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Re
   logDebug() << "Monitor accepted: " << sessionInfo.id();
   App()->getSession() = sessionInfo;
 
+  logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval()
+             << " sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval()
+             << " sysProcMemInfoPollInterval=" << sessionInfo.sys_proc_meminfo_poll_interval()
+             << " sysProcPressurePollInterval=" << sessionInfo.sys_proc_pressure_poll_interval();
+
   return App()->getCommand()->trigger();
 }
 
