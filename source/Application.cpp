@@ -9,8 +9,11 @@
  *-
  */
 
+#include <filesystem>
+
 #include "Application.h"
 #include "Arguments.h"
+#include "Logger.h"
 #include "SQLiteDatabase.h"
 
 using std::string;
@@ -31,6 +34,17 @@ Application::Application(const string &name,
   appInstance = this;
 
   m_arguments = std::make_shared<Arguments>(args);
+
+  if (std::filesystem::exists(App()->getArguments()->getFor(Arguments::Key::DatabasePath))) {
+    logWarn() << "Removing existing database output file: "
+              << App()->getArguments()->getFor(Arguments::Key::DatabasePath);
+    std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::DatabasePath));
+  }
+  if (std::filesystem::exists(App()->getArguments()->getFor(Arguments::Key::JsonPath))) {
+    logWarn() << "Removing existing jason output file: "
+              << App()->getArguments()->getFor(Arguments::Key::JsonPath);
+    std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::JsonPath));
+  }
 
   m_database = std::make_shared<SQLiteDatabase>();
   m_database->enableEvents();

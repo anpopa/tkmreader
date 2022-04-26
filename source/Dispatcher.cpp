@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <filesystem>
 #include <iostream>
 #include <json/json.h>
 #include <ostream>
@@ -18,6 +19,7 @@
 #include <unistd.h>
 
 #include "Application.h"
+#include "Arguments.h"
 #include "Defaults.h"
 #include "Dispatcher.h"
 #include "Helpers.h"
@@ -225,8 +227,6 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
   auto procEventTimer = std::make_shared<Timer>("ProcEventTimer", [&mgr]() {
     tkm::msg::Envelope requestEnvelope;
     tkm::msg::collector::Request requestMessage;
-
-    logDebug() << "Request proc event";
 
     requestMessage.set_id("GetProcEvent");
     requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcEventStats);

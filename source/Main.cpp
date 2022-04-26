@@ -14,6 +14,7 @@
 
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <getopt.h>
 #include <iostream>
 #include <map>
@@ -42,7 +43,7 @@ auto main(int argc, char **argv) -> int
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
-  while ((c = getopt_long(argc, argv, "n:a:p:h", longopts, &longIndex)) != -1) {
+  while ((c = getopt_long(argc, argv, "n:a:p:d:j:h", longopts, &longIndex)) != -1) {
     switch (c) {
     case 'n':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
