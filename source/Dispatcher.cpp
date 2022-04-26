@@ -148,6 +148,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Re
   App()->getSession() = sessionInfo;
 
   logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval()
+             << " procEventPollInterval=" << sessionInfo.proc_event_poll_interval()
              << " sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval()
              << " sysProcMemInfoPollInterval=" << sessionInfo.sys_proc_meminfo_poll_interval()
              << " sysProcPressurePollInterval=" << sessionInfo.sys_proc_pressure_poll_interval();
@@ -172,6 +173,24 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
   });
   procAcctTimer->start(App()->getSession().proc_acct_poll_interval(), true);
   App()->addEventSource(procAcctTimer);
+
+  // ProcEvent timer
+  auto procEventTimer = std::make_shared<Timer>("ProcEventTimer", [&mgr]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    logDebug() << "Request proc event";
+
+    requestMessage.set_id("GetProcEvent");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcEventStats);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return App()->getConnection()->writeEnvelope(requestEnvelope);
+  });
+  procEventTimer->start(App()->getSession().proc_event_poll_interval(), true);
+  App()->addEventSource(procEventTimer);
 
   // SysProcStat timer
   auto sysProcStatTimer = std::make_shared<Timer>("SysProcStatTimer", [&mgr]() {
@@ -389,7 +408,7 @@ static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
   Json::Value head;
   Json::Value body;
 
-  head["type"] = "proc";
+  head["type"] = "procstats";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
@@ -402,7 +421,7 @@ static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
   body["exit_count"] = event.exit_count();
   body["uid_count"] = event.uid_count();
   body["gid_count"] = event.gid_count();
-  head["fork"] = body;
+  head["procstats"] = body;
 
   writeJsonStream() << head;
 }

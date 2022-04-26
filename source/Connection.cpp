@@ -22,8 +22,6 @@
 
 #include "Monitor.pb.h"
 
-namespace fs = std::filesystem;
-
 namespace tkm::reader
 {
 
