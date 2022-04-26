@@ -21,6 +21,7 @@
 #include "Defaults.h"
 #include "Dispatcher.h"
 #include "Helpers.h"
+#include "IDatabase.h"
 #include "JsonWriter.h"
 
 #include "Collector.pb.h"
@@ -48,6 +49,7 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
                                 uint64_t systemTime,
                                 uint64_t monotonicTime);
 
+static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
 static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
 static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
 static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
@@ -70,6 +72,8 @@ auto Dispatcher::pushRequest(Request &request) -> bool
 auto Dispatcher::requestHandler(const Request &request) -> bool
 {
   switch (request.action) {
+  case Dispatcher::Action::PrepareData:
+    return doPrepareData(getShared(), request);
   case Dispatcher::Action::Connect:
     return doConnect(getShared(), request);
   case Dispatcher::Action::SendDescriptor:
@@ -92,6 +96,31 @@ auto Dispatcher::requestHandler(const Request &request) -> bool
 
   logError() << "Unknown action request";
   return false;
+}
+
+static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
+{
+  Dispatcher::Request rq;
+  bool status = true;
+
+  App()->getDeviceData().set_state(tkm::msg::control::DeviceData_State_Unknown);
+  App()->getDeviceData().set_name(App()->getArguments()->getFor(Arguments::Key::Name));
+  App()->getDeviceData().set_address(App()->getArguments()->getFor(Arguments::Key::Address));
+  App()->getDeviceData().set_port(
+      std::stoi(App()->getArguments()->getFor(Arguments::Key::Address)));
+  App()->getDeviceData().set_hash(hashForDevice(App()->getDeviceData()));
+
+  IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
+  status = App()->getDatabase()->pushRequest(dbInit);
+
+  if (!status) {
+    std::cout << "Connot initialize output files" << std::endl;
+    rq.action = Dispatcher::Action::Quit;
+  } else {
+    rq.action = Dispatcher::Action::Connect;
+  }
+
+  return mgr->pushRequest(rq);
 }
 
 static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
@@ -143,9 +172,20 @@ static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher
 static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
 {
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
+  bool status = true;
 
   logDebug() << "Monitor accepted: " << sessionInfo.id();
   App()->getSession() = sessionInfo;
+
+  App()->getSessionData().set_hash(sessionInfo.id());
+  App()->getSessionData().set_proc_acct_poll_interval(sessionInfo.proc_acct_poll_interval());
+  App()->getSessionData().set_proc_event_poll_interval(sessionInfo.proc_event_poll_interval());
+  App()->getSessionData().set_sys_proc_stat_poll_interval(
+      sessionInfo.sys_proc_stat_poll_interval());
+  App()->getSessionData().set_sys_proc_meminfo_poll_interval(
+      sessionInfo.sys_proc_meminfo_poll_interval());
+  App()->getSessionData().set_sys_proc_pressure_poll_interval(
+      sessionInfo.sys_proc_pressure_poll_interval());
 
   logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval()
              << " procEventPollInterval=" << sessionInfo.proc_event_poll_interval()
@@ -153,7 +193,14 @@ static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Re
              << " sysProcMemInfoPollInterval=" << sessionInfo.sys_proc_meminfo_poll_interval()
              << " sysProcPressurePollInterval=" << sessionInfo.sys_proc_pressure_poll_interval();
 
-  return App()->getCommand()->trigger();
+  IDatabase::Request dbReq = {IDatabase::Action::AddSession};
+  status = App()->getDatabase()->pushRequest(dbReq);
+
+  if (status) {
+    status = App()->getCommand()->trigger();
+  }
+
+  return status;
 }
 
 static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
@@ -282,7 +329,8 @@ static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
     break;
   }
 
-  return true;
+  IDatabase::Request dbReq = {.action = IDatabase::Action::AddData, .bulkData = rq.bulkData};
+  return App()->getDatabase()->pushRequest(dbReq);
 }
 
 static bool doStatus(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
@@ -345,7 +393,6 @@ printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint
   common["ac_ppid"] = acct.ac_ppid();
   common["ac_utime"] = acct.ac_utime();
   common["ac_stime"] = acct.ac_stime();
-  common["cpu_percent"] = acct.cpu_percent();
   head["common"] = common;
 
   Json::Value cpu;

@@ -10,6 +10,8 @@
  */
 
 #include "Application.h"
+#include "Arguments.h"
+#include "SQLiteDatabase.h"
 
 using std::string;
 
@@ -29,6 +31,9 @@ Application::Application(const string &name,
   appInstance = this;
 
   m_arguments = std::make_shared<Arguments>(args);
+
+  m_database = std::make_shared<SQLiteDatabase>();
+  m_database->enableEvents();
 
   m_connection = std::make_shared<Connection>();
   m_connection->enableEvents();

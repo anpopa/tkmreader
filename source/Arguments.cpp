@@ -32,6 +32,10 @@ auto Arguments::getFor(Key key) -> string const
     return tkmDefaults.getFor(Defaults::Default::Port);
   case Key::Name:
     return tkmDefaults.getFor(Defaults::Default::Name);
+  case Key::DatabasePath:
+    return tkmDefaults.getFor(Defaults::Default::DatabasePath);
+  case Key::JsonPath:
+    return tkmDefaults.getFor(Defaults::Default::JsonPath);
   default:
     break;
   }

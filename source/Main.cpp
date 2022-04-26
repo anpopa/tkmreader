@@ -37,6 +37,8 @@ auto main(int argc, char **argv) -> int
   struct option longopts[] = {{"name", required_argument, nullptr, 'n'},
                               {"address", required_argument, nullptr, 'a'},
                               {"port", required_argument, nullptr, 'p'},
+                              {"database", required_argument, nullptr, 'd'},
+                              {"json", required_argument, nullptr, 'j'},
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
@@ -50,6 +52,12 @@ auto main(int argc, char **argv) -> int
       break;
     case 'p':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Port, optarg));
+      break;
+    case 'd':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::DatabasePath, optarg));
+      break;
+    case 'j':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::JsonPath, optarg));
       break;
     case 'h':
       help = true;
@@ -67,6 +75,9 @@ auto main(int argc, char **argv) -> int
     cout << "     --name, -n      <string>  Device name (default unknown)\n";
     cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
     cout << "     --port, -p      <int>     Device port number (default 3357)\n";
+    cout << "  Output:\n";
+    cout << "     --database, -d  <string>  Path to output database file\n";
+    cout << "     --json, -j      <string>  Path to output json file (stdout if not set)\n";
     cout << "  Help:\n";
     cout << "     --help, -h                Print this help\n\n";
 
@@ -82,11 +93,11 @@ auto main(int argc, char **argv) -> int
     Command::Request startStreamRequest{.action = Command::Action::StartStream};
     app.getCommand()->addRequest(startStreamRequest);
 
-    // Request connection
-    Dispatcher::Request connectRequest{
-        .action = Dispatcher::Action::Connect,
+    // Prepare output data
+    Dispatcher::Request prepareRequest{
+        .action = Dispatcher::Action::PrepareData,
     };
-    app.getDispatcher()->pushRequest(connectRequest);
+    app.getDispatcher()->pushRequest(prepareRequest);
 
     app.run();
   } catch (std::exception &e) {

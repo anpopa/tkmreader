@@ -17,6 +17,9 @@ message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
 
+# Enable collector interfaces
+set(WITH_COLLECTOR_CONTROL ON)
+
 include(BSWInfra)
 include(TaskMonitorInterfaces)
 
@@ -72,6 +75,10 @@ set                   (LIBS ${LIBS} pthread)
 pkg_check_modules     (JSONCPP jsoncpp REQUIRED)
 include_directories   (${JSONCPP_INCLUDE_DIRS})
 set                   (LIBS ${LIBS} ${JSONCPP_LIBRARIES})
+
+# Use sqlite3
+find_package       (SQLite3 REQUIRED)
+include_directories(${SQLITE3_INCLUDE_DIR})
 
 add_subdirectory(source)
 

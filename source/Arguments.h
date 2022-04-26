@@ -20,7 +20,7 @@ namespace tkm::reader
 class Arguments
 {
 public:
-  enum class Key { Name, Address, Port };
+  enum class Key { Name, Address, Port, DatabasePath, JsonPath };
 
 public:
   explicit Arguments(const std::map<Key, std::string> &opts)

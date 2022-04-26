@@ -18,6 +18,7 @@
 #include "../bswinfra/source/Logger.h"
 
 #include "Collector.pb.h"
+#include "Control.pb.h"
 
 namespace tkm
 {
@@ -25,6 +26,7 @@ namespace tkm
 auto jnkHsh(const char *key) -> uint64_t;
 auto base64Encode(unsigned char const *bytes_to_encode, unsigned int in_len) -> std::string;
 auto base64Decode(std::string const &encoded_string) -> std::string;
+auto hashForDevice(const tkm::msg::control::DeviceData &data) -> std::string;
 bool sendCollectorDescriptor(int fd, tkm::msg::collector::Descriptor &descriptor);
 bool readCollectorDescriptor(int fd, tkm::msg::collector::Descriptor &descriptor);
 

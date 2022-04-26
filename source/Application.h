@@ -21,6 +21,7 @@
 #include "Connection.h"
 #include "Defaults.h"
 #include "Dispatcher.h"
+#include "SQLiteDatabase.h"
 
 #include "../bswinfra/source/IApplication.h"
 
@@ -72,7 +73,11 @@ public:
   auto getDispatcher() -> std::shared_ptr<Dispatcher> { return m_dispatcher; }
   auto getCommand() -> std::shared_ptr<Command> { return m_command; }
   auto getConnection() -> std::shared_ptr<Connection> { return m_connection; }
+  auto getDatabase() -> std::shared_ptr<SQLiteDatabase> { return m_database; }
   auto getArguments() -> std::shared_ptr<Arguments> { return m_arguments; }
+
+  auto getDeviceData() -> tkm::msg::control::DeviceData & { return m_deviceData; }
+  auto getSessionData() -> tkm::msg::control::SessionData & { return m_sessionData; }
 
 public:
   Application(Application const &) = delete;
@@ -83,9 +88,12 @@ private:
   std::shared_ptr<Connection> m_connection = nullptr;
   std::shared_ptr<Command> m_command = nullptr;
   std::shared_ptr<Dispatcher> m_dispatcher = nullptr;
+  std::shared_ptr<SQLiteDatabase> m_database = nullptr;
 
 private:
   tkm::msg::monitor::SessionInfo m_session{};
+  tkm::msg::control::DeviceData m_deviceData{};
+  tkm::msg::control::SessionData m_sessionData{};
   static Application *appInstance;
 };
 

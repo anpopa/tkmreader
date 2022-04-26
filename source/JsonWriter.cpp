@@ -12,6 +12,7 @@
 #include "JsonWriter.h"
 #include "../bswinfra/source/Logger.h"
 #include "Application.h"
+#include "Arguments.h"
 #include <iostream>
 #include <json/writer.h>
 #include <memory>
@@ -19,17 +20,20 @@
 namespace tkm::reader
 {
 
+static std::unique_ptr<std::ofstream> m_outStream = nullptr;
 JsonWriter *JsonWriter::instance = nullptr;
 
 JsonWriter::JsonWriter()
 {
+  m_outStream = std::make_unique<std::ofstream>(
+      App()->getArguments()->getFor(Arguments::Key::JsonPath), std::ofstream::out);
   builder["commentStyle"] = "None";
   builder["indentation"] = "";
 }
 
 void JsonWriter::Payload::print()
 {
-  std::cout << m_stream.str() << std::endl;
+  *m_outStream << m_stream.str() << std::endl;
 }
 
 } // namespace tkm::reader

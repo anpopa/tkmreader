@@ -11,8 +11,10 @@
 
 #pragma once
 
+#include <fstream>
 #include <json/json.h>
 #include <json/writer.h>
+#include <memory>
 #include <sstream>
 #include <string>
 

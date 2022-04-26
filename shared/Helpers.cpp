@@ -212,4 +212,11 @@ bool readCollectorDescriptor(int fd, tkm::msg::collector::Descriptor &descriptor
   return true;
 }
 
+auto hashForDevice(const tkm::msg::control::DeviceData &data) -> std::string
+{
+  std::string tmp = data.address();
+  tmp += std::to_string(data.port());
+  return std::to_string(jnkHsh(tmp.c_str()));
+}
+
 } // namespace tkm
