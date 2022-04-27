@@ -72,7 +72,7 @@ find_package		  (Threads REQUIRED)
 set                   (LIBS ${LIBS} pthread)
 
 # Use jsoncpp
-pkg_check_modules     (JSONCPP jsoncpp REQUIRED)
+pkg_check_modules     (JSONCPP jsoncpp>=1.9.4 REQUIRED)
 include_directories   (${JSONCPP_INCLUDE_DIRS})
 set                   (LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 
