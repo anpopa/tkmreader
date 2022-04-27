@@ -77,8 +77,8 @@ include_directories   (${JSONCPP_INCLUDE_DIRS})
 set                   (LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 
 # Use sqlite3
-find_package       (SQLite3 REQUIRED)
-include_directories(${SQLITE3_INCLUDE_DIR})
+find_package          (SQLite3 REQUIRED)
+include_directories   (${SQLITE3_INCLUDE_DIR})
 
 add_subdirectory(source)
 

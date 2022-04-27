@@ -3,7 +3,7 @@ Simple reader application for taskmonitor
 
 ## Getting started
 This is a host tool to connect and read data stream from taskmonitor service.
-The output is serialised in JSON data format to be used in data visualization tools.
+The output is serialized in JSON data format to be used in data visualization tools.
 
 ## Download
 `# git clone --recurse-submodules https://gitlab.com/taskmonitor/tkm-reader.git`
@@ -14,6 +14,7 @@ TKM-Reader depends on the following libraries
 
 | Library | Reference | Info |
 | ------ | ------ | ------ |
+| sqlite3 | https://www.sqlite.org/index.html | Output sqlite3 database |
 | jsoncpp | https://github.com/open-source-parsers/jsoncpp | Emit Json output |
 | protobuf | https://developers.google.com/protocol-buffers | Data serialization |
 | libsystemd | https://github.com/systemd/systemd/tree/main/src/libsystemd | Optional if WITH_SYSTEMD is ON 
