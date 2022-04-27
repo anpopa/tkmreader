@@ -108,8 +108,7 @@ static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
   App()->getDeviceData().set_state(tkm::msg::control::DeviceData_State_Unknown);
   App()->getDeviceData().set_name(App()->getArguments()->getFor(Arguments::Key::Name));
   App()->getDeviceData().set_address(App()->getArguments()->getFor(Arguments::Key::Address));
-  App()->getDeviceData().set_port(
-      std::stoi(App()->getArguments()->getFor(Arguments::Key::Address)));
+  App()->getDeviceData().set_port(std::stoi(App()->getArguments()->getFor(Arguments::Key::Port)));
   App()->getDeviceData().set_hash(hashForDevice(App()->getDeviceData()));
 
   IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};

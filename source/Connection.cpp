@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <filesystem>
 #include <netdb.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "Application.h"
@@ -78,6 +79,7 @@ Connection::Connection()
             tkm::msg::monitor::Data data;
 
             msg.payload().UnpackTo(&data);
+            data.set_receive_time_sec(time(NULL));
             rq.bulkData = std::make_any<tkm::msg::monitor::Data>(data);
 
             App()->getDispatcher()->pushRequest(rq);
