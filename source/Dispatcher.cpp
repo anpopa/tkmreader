@@ -175,10 +175,10 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
 
-  logDebug() << "Monitor accepted: " << sessionInfo.id();
+  logDebug() << "Monitor accepted: " << sessionInfo.hash();
   App()->getSessionInfo() = sessionInfo;
 
-  App()->getSessionData().set_hash(sessionInfo.id());
+  App()->getSessionData().set_hash(sessionInfo.hash());
   App()->getSessionData().set_proc_acct_poll_interval(sessionInfo.proc_acct_poll_interval());
   App()->getSessionData().set_proc_event_poll_interval(sessionInfo.proc_event_poll_interval());
   App()->getSessionData().set_sys_proc_stat_poll_interval(
@@ -189,12 +189,28 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
       sessionInfo.sys_proc_pressure_poll_interval());
 
   logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval()
-             << " procEventPollInterval=" << sessionInfo.proc_event_poll_interval()
-             << " sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval()
-             << " sysProcMemInfoPollInterval=" << sessionInfo.sys_proc_meminfo_poll_interval()
-             << " sysProcPressurePollInterval=" << sessionInfo.sys_proc_pressure_poll_interval();
+             << " procEventPollInt=" << sessionInfo.proc_event_poll_interval()
+             << " sysProcStatPollInt=" << sessionInfo.sys_proc_stat_poll_interval()
+             << " sysProcMemInfoPollInt=" << sessionInfo.sys_proc_meminfo_poll_interval()
+             << " sysProcPressurePollInt=" << sessionInfo.sys_proc_pressure_poll_interval();
 
-  IDatabase::Request dbReq = {IDatabase::Action::AddSession};
+  Json::Value head;
+  head["type"] = "session";
+  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
+  head["session"] = App()->getSessionInfo().hash();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+
+  Json::Value intervals;
+  intervals["proc_acct_poll"] = sessionInfo.proc_acct_poll_interval();
+  intervals["proc_event_poll"] = sessionInfo.proc_event_poll_interval();
+  intervals["sys_proc_stat_poll"] = sessionInfo.sys_proc_stat_poll_interval();
+  intervals["sys_proc_meminfo_poll"] = sessionInfo.sys_proc_meminfo_poll_interval();
+  intervals["sys_proc_pressure_poll"] = sessionInfo.sys_proc_pressure_poll_interval();
+  head["intervals"] = intervals;
+
+  writeJsonStream() << head;
+
+  IDatabase::Request dbReq = {.action = IDatabase::Action::AddSession, .bulkData = rq.bulkData};
   status = App()->getDatabase()->pushRequest(dbReq);
 
   if (status) {
@@ -380,9 +396,7 @@ printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
-  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSessionInfo().id();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+  head["session"] = App()->getSessionInfo().hash();
 
   Json::Value common;
   common["ac_comm"] = acct.ac_comm();
@@ -458,9 +472,7 @@ static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
-  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSessionInfo().id();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+  head["session"] = App()->getSessionInfo().hash();
 
   body["fork_count"] = event.fork_count();
   body["exec_count"] = event.exec_count();
@@ -482,9 +494,7 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
-  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSessionInfo().id();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+  head["session"] = App()->getSessionInfo().hash();
 
   Json::Value cpu;
   cpu["name"] = sysProcStat.cpu().name();
@@ -506,9 +516,7 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
-  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSessionInfo().id();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+  head["session"] = App()->getSessionInfo().hash();
 
   Json::Value meminfo;
   meminfo["mem_total"] = sysProcMeminfo.mem_total();
@@ -535,9 +543,7 @@ static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysPr
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
-  head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSessionInfo().id();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
+  head["session"] = App()->getSessionInfo().hash();
 
   if (sysProcPressure.has_cpu_some() || sysProcPressure.has_cpu_full()) {
     Json::Value cpu;

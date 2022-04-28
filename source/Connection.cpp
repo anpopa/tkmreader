@@ -69,6 +69,11 @@ Connection::Connection()
             tkm::msg::monitor::SessionInfo sessionInfo;
 
             msg.payload().UnpackTo(&sessionInfo);
+
+            const std::string sessionName =
+                "Collector." + std::to_string(getpid()) + "." + std::to_string(time(NULL));
+            sessionInfo.set_name(sessionName);
+
             rq.bulkData = std::make_any<tkm::msg::monitor::SessionInfo>(sessionInfo);
 
             App()->getDispatcher()->pushRequest(rq);

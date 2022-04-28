@@ -205,6 +205,8 @@ static bool doAddDevice(const shared_ptr<SQLiteDatabase> db, const IDatabase::Re
 
 static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
+  const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
+
   auto sesId = -1;
   SQLiteDatabase::Query queryCheckExisting{.type = SQLiteDatabase::QueryType::HasSession};
   queryCheckExisting.raw = &sesId;
@@ -227,16 +229,11 @@ static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::R
     logError() << "Failed to check existing session";
   }
 
-  const std::string sessionName =
-      "Collector." + std::to_string(getpid()) + "." + std::to_string(time(NULL));
-
   SQLiteDatabase::Query query{.type = SQLiteDatabase::QueryType::AddSession};
-  status = db->runQuery(tkmQuery.addSession(Query::Type::SQLite3,
-                                            App()->getSessionData().hash(),
-                                            sessionName,
-                                            time(NULL),
-                                            App()->getDeviceData().hash()),
-                        query);
+  status = db->runQuery(
+      tkmQuery.addSession(
+          Query::Type::SQLite3, sessionInfo, App()->getDeviceData().hash(), time(NULL)),
+      query);
   if (!status) {
     logError() << "Query failed to add session";
   }
