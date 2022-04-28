@@ -32,7 +32,7 @@ build:
     GIT_SUBMODULE_STRATEGY: recursive
   before_script:
     - apt update
-    - apt -y install build-essential cmake pkgconf libprotobuf-dev protobuf-compiler libjsoncpp-dev
+    - apt -y install build-essential cmake pkgconf libprotobuf-dev protobuf-compiler libjsoncpp-dev libsqlite3-dev
   script:
     - mkdir build && cd build && cmake .. && make
 
