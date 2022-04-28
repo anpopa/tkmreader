@@ -51,15 +51,15 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
                                 uint64_t systemTime,
                                 uint64_t monotonicTime);
 
-static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doStatus(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
-static bool doQuit(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq);
+static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doQuit(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 
 void Dispatcher::enableEvents()
 {
@@ -100,7 +100,7 @@ auto Dispatcher::requestHandler(const Request &request) -> bool
   return false;
 }
 
-static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
+static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
   bool status = true;
@@ -124,7 +124,7 @@ static bool doPrepareData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
   return mgr->pushRequest(rq);
 }
 
-static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
+static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
 
@@ -138,7 +138,7 @@ static bool doConnect(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Reque
   return mgr->pushRequest(rq);
 }
 
-static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
+static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   tkm::msg::collector::Descriptor descriptor;
 
@@ -154,7 +154,7 @@ static bool doSendDescriptor(const shared_ptr<Dispatcher> &mgr, const Dispatcher
   return mgr->pushRequest(nrq);
 }
 
-static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
+static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   tkm::msg::Envelope envelope;
   tkm::msg::collector::Request request;
@@ -170,13 +170,13 @@ static bool doRequestSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher
   return App()->getConnection()->writeEnvelope(envelope);
 }
 
-static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
+static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
 
   logDebug() << "Monitor accepted: " << sessionInfo.id();
-  App()->getSession() = sessionInfo;
+  App()->getSessionInfo() = sessionInfo;
 
   App()->getSessionData().set_hash(sessionInfo.id());
   App()->getSessionData().set_proc_acct_poll_interval(sessionInfo.proc_acct_poll_interval());
@@ -204,7 +204,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Re
   return status;
 }
 
-static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &)
+static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   // ProcAcct timer
   auto procAcctTimer = std::make_shared<Timer>("ProcAcctTimer", [&mgr]() {
@@ -219,7 +219,7 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
     return App()->getConnection()->writeEnvelope(requestEnvelope);
   });
-  procAcctTimer->start(App()->getSession().proc_acct_poll_interval(), true);
+  procAcctTimer->start(App()->getSessionInfo().proc_acct_poll_interval(), true);
   App()->addEventSource(procAcctTimer);
 
   // ProcEvent timer
@@ -235,7 +235,7 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
     return App()->getConnection()->writeEnvelope(requestEnvelope);
   });
-  procEventTimer->start(App()->getSession().proc_event_poll_interval(), true);
+  procEventTimer->start(App()->getSessionInfo().proc_event_poll_interval(), true);
   App()->addEventSource(procEventTimer);
 
   // SysProcStat timer
@@ -251,7 +251,7 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
     return App()->getConnection()->writeEnvelope(requestEnvelope);
   });
-  sysProcStatTimer->start(App()->getSession().sys_proc_stat_poll_interval(), true);
+  sysProcStatTimer->start(App()->getSessionInfo().sys_proc_stat_poll_interval(), true);
   App()->addEventSource(sysProcStatTimer);
 
   // SysProcMemInfo timer
@@ -267,7 +267,7 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
     return App()->getConnection()->writeEnvelope(requestEnvelope);
   });
-  sysProcMemInfoTimer->start(App()->getSession().sys_proc_meminfo_poll_interval(), true);
+  sysProcMemInfoTimer->start(App()->getSessionInfo().sys_proc_meminfo_poll_interval(), true);
   App()->addEventSource(sysProcMemInfoTimer);
 
   // SysProcPressure timer
@@ -283,13 +283,13 @@ static bool doStartStream(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
 
     return App()->getConnection()->writeEnvelope(requestEnvelope);
   });
-  sysProcPressureTimer->start(App()->getSession().sys_proc_pressure_poll_interval(), true);
+  sysProcPressureTimer->start(App()->getSessionInfo().sys_proc_pressure_poll_interval(), true);
   App()->addEventSource(sysProcPressureTimer);
 
   return true;
 }
 
-static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
+static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &data = std::any_cast<tkm::msg::monitor::Data>(rq.bulkData);
 
@@ -332,7 +332,7 @@ static bool doProcessData(const shared_ptr<Dispatcher> &mgr, const Dispatcher::R
   return App()->getDatabase()->pushRequest(dbReq);
 }
 
-static bool doStatus(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Request &rq)
+static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &monitorStatus = std::any_cast<tkm::msg::monitor::Status>(rq.bulkData);
   std::string what;
@@ -365,7 +365,7 @@ static bool doStatus(const shared_ptr<Dispatcher> &mgr, const Dispatcher::Reques
   return App()->getCommand()->trigger();
 }
 
-static bool doQuit(const shared_ptr<Dispatcher> &, const Dispatcher::Request &)
+static bool doQuit(const shared_ptr<Dispatcher>, const Dispatcher::Request &)
 {
   std::cout << std::flush;
   exit(EXIT_SUCCESS);
@@ -381,8 +381,8 @@ printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycle_id();
+  head["session"] = App()->getSessionInfo().id();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
 
   Json::Value common;
   common["ac_comm"] = acct.ac_comm();
@@ -459,8 +459,8 @@ static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycle_id();
+  head["session"] = App()->getSessionInfo().id();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
 
   body["fork_count"] = event.fork_count();
   body["exec_count"] = event.exec_count();
@@ -483,8 +483,8 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycle_id();
+  head["session"] = App()->getSessionInfo().id();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
 
   Json::Value cpu;
   cpu["name"] = sysProcStat.cpu().name();
@@ -507,8 +507,8 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycle_id();
+  head["session"] = App()->getSessionInfo().id();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
 
   Json::Value meminfo;
   meminfo["mem_total"] = sysProcMeminfo.mem_total();
@@ -536,8 +536,8 @@ static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysPr
   head["monotonic_time"] = monotonicTime;
   head["receive_time"] = ::time(NULL);
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
-  head["session"] = App()->getSession().id();
-  head["lifecycle"] = App()->getSession().lifecycle_id();
+  head["session"] = App()->getSessionInfo().id();
+  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
 
   if (sysProcPressure.has_cpu_some() || sysProcPressure.has_cpu_full()) {
     Json::Value cpu;

@@ -57,7 +57,7 @@ public:
     }
 
     std::map<Arguments::Key, std::string> noArgs;
-    appInstance = new Application("TMC", "TaskMonitor Reader Application", noArgs);
+    appInstance = new Application("TkmReader", "TaskMonitor Reader Application", noArgs);
 
     return appInstance;
   }
@@ -69,13 +69,12 @@ public:
     }
   }
 
-  auto getSession() -> tkm::msg::monitor::SessionInfo & { return m_session; }
-  auto getDispatcher() -> std::shared_ptr<Dispatcher> { return m_dispatcher; }
-  auto getCommand() -> std::shared_ptr<Command> { return m_command; }
-  auto getConnection() -> std::shared_ptr<Connection> { return m_connection; }
-  auto getDatabase() -> std::shared_ptr<SQLiteDatabase> { return m_database; }
-  auto getArguments() -> std::shared_ptr<Arguments> { return m_arguments; }
-
+  auto getDispatcher() -> const std::shared_ptr<Dispatcher> { return m_dispatcher; }
+  auto getCommand() -> const std::shared_ptr<Command> { return m_command; }
+  auto getConnection() -> const std::shared_ptr<Connection> { return m_connection; }
+  auto getDatabase() -> const std::shared_ptr<SQLiteDatabase> { return m_database; }
+  auto getArguments() -> const std::shared_ptr<Arguments> { return m_arguments; }
+  auto getSessionInfo() -> tkm::msg::monitor::SessionInfo & { return m_sessionInfo; }
   auto getDeviceData() -> tkm::msg::control::DeviceData & { return m_deviceData; }
   auto getSessionData() -> tkm::msg::control::SessionData & { return m_sessionData; }
 
@@ -91,7 +90,7 @@ private:
   std::shared_ptr<SQLiteDatabase> m_database = nullptr;
 
 private:
-  tkm::msg::monitor::SessionInfo m_session{};
+  tkm::msg::monitor::SessionInfo m_sessionInfo{};
   tkm::msg::control::DeviceData m_deviceData{};
   tkm::msg::control::SessionData m_sessionData{};
   static Application *appInstance;

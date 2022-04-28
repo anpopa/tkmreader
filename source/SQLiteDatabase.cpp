@@ -34,17 +34,16 @@ namespace tkm::reader
 {
 
 static auto sqlite_callback(void *data, int argc, char **argv, char **colname) -> int;
-static bool doCheckDatabase(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doInitDatabase(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doAddDevice(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doConnect(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doDisconnect(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doStartDeviceSession(const shared_ptr<SQLiteDatabase> &db,
-                                 const IDatabase::Request &rq);
-static bool doStopDeviceSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doAddSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doEndSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
-static bool doAddData(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq);
+static bool doCheckDatabase(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doInitDatabase(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doAddDevice(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doConnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doDisconnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doStartDeviceSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doStopDeviceSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doEndSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
+static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
 
 SQLiteDatabase::SQLiteDatabase(void)
 : IDatabase()
@@ -151,13 +150,13 @@ bool SQLiteDatabase::requestHandler(const Request &rq)
   return false;
 }
 
-static bool doCheckDatabase(const shared_ptr<SQLiteDatabase> &db, const SQLiteDatabase::Request &rq)
+static bool doCheckDatabase(const shared_ptr<SQLiteDatabase> db, const SQLiteDatabase::Request &rq)
 {
   // TODO: Handle database check
   return true;
 }
 
-static bool doInitDatabase(const shared_ptr<SQLiteDatabase> &db, const SQLiteDatabase::Request &rq)
+static bool doInitDatabase(const shared_ptr<SQLiteDatabase> db, const SQLiteDatabase::Request &rq)
 {
 
   SQLiteDatabase::Query cleanQuery{.type = SQLiteDatabase::QueryType::DropTables};
@@ -176,7 +175,7 @@ static bool doInitDatabase(const shared_ptr<SQLiteDatabase> &db, const SQLiteDat
   return status;
 }
 
-static bool doAddDevice(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doAddDevice(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   tkm::msg::control::DeviceData deviceData;
   auto devId = -1;
@@ -204,7 +203,7 @@ static bool doAddDevice(const shared_ptr<SQLiteDatabase> &db, const IDatabase::R
   return status;
 }
 
-static bool doAddSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   auto sesId = -1;
   SQLiteDatabase::Query queryCheckExisting{.type = SQLiteDatabase::QueryType::HasSession};
@@ -245,7 +244,7 @@ static bool doAddSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::
   return status;
 }
 
-static bool doEndSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doEndSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   logDebug() << "Handling DB EndSession request";
 
@@ -259,7 +258,7 @@ static bool doEndSession(const shared_ptr<SQLiteDatabase> &db, const IDatabase::
   return true;
 }
 
-static bool doAddData(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   SQLiteDatabase::Query query{.type = SQLiteDatabase::QueryType::AddData};
   const auto &data = std::any_cast<tkm::msg::monitor::Data>(rq.bulkData);
@@ -384,13 +383,13 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Req
   return true;
 }
 
-static bool doConnect(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doConnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   // No need for DB connect with SQLite
   return true;
 }
 
-static bool doDisconnect(const shared_ptr<SQLiteDatabase> &db, const IDatabase::Request &rq)
+static bool doDisconnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
   // No need for DB disconnect with SQLite
   return true;
