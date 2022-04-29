@@ -194,6 +194,19 @@ auto Connection::connect() -> int
     }
   }
 
+  struct timeval timeout;
+  timeout.tv_sec = 3;
+  timeout.tv_usec = 0;
+
+  if (setsockopt(m_sockFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+    logError() << "Failed to setsockopt";
+    return -1;
+  }
+  if (setsockopt(m_sockFd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
+    logError() << "Failed to setsockopt";
+    return -1;
+  }
+
   // We are ready to process events
   logInfo() << "Connected to monitor";
   setPrepare([]() { return true; });
