@@ -1,5 +1,5 @@
-tkmreader (0.0.1) master; urgency=medium
+tkmreader (0.0.1) main; urgency=medium
 
   * tkmreader: Initial debian package
 
- -- Alin Popa <alin.popa@fxdata.ro>  Sat, 30 April 2022 12:44:58 +0100
+ -- Alin Popa <alin.popa@fxdata.ro>  Sat, 30 Apr 2022 12:44:58 +0100

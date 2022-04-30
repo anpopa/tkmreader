@@ -5,8 +5,9 @@ Maintainer: Alin Popa <alin.popa@fxdata.ro>
 Build-Depends: debhelper (>=12~),
                libsqlite3-dev,
                libjsoncpp-dev,
-               libjson24,
-               pkg-config
+               libjsoncpp24,
+               pkg-config,
+               cmake
 Standards-Version: 4.1.3
 
 Package: tkmreader

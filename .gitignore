@@ -7,6 +7,17 @@
 build/
 cmake-build-debug/
 
+# Debian build
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/tkmreader-dbg.substvars
+debian/tkmreader-dbg/
+debian/tkmreader.substvars
+debian/tkmreader/
+debian/tmp/
+obj-x86_64-linux-gnu/
+
 # Node artifact files
 node_modules/
 dist/
