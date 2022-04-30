@@ -1,4 +1,4 @@
-set(BINARY_NAME tkmreader)
+set(BINARY_NAME tkm-reader)
 set(BINARY_SRC 
     ${CMAKE_SOURCE_DIR}/shared/Helpers.cpp
     ${CMAKE_SOURCE_DIR}/shared/EnvelopeReader.cpp

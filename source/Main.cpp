@@ -78,7 +78,7 @@ auto main(int argc, char **argv) -> int
     cout << "     --port, -p      <int>     Device port number (default 3357)\n";
     cout << "  Output:\n";
     cout << "     --database, -d  <string>  Path to output database file\n";
-    cout << "     --json, -j      <string>  Path to output json file (stdout if not set)\n";
+    cout << "     --json, -j      <string>  Path to output json file\n";
     cout << "  Help:\n";
     cout << "     --help, -h                Print this help\n\n";
 
@@ -89,7 +89,7 @@ auto main(int argc, char **argv) -> int
   signal(SIGTERM, terminate);
 
   try {
-    Application app{"TMC", "TaskMonitor Reader", args};
+    Application app{"TKM-Reader", "TaskMonitor Reader", args};
 
     Command::Request startStreamRequest{.action = Command::Action::StartStream};
     app.getCommand()->addRequest(startStreamRequest);
