@@ -119,6 +119,10 @@ add_compile_options (
     -Wredundant-decls
     )
 
+if (${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+    install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION /usr/share/licenses/tkmreader)
+endif()
+
 # Status reporting
 message (STATUS "SYSTEM_TYPE: "          ${CMAKE_SYSTEM_NAME})
 message (STATUS "CMAKE_BUILD_TYPE: "     ${CMAKE_BUILD_TYPE})
