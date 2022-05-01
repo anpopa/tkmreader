@@ -14,6 +14,7 @@
 #include "Arguments.h"
 #include "Defaults.h"
 #include "IDatabase.h"
+#include "IEventSource.h"
 #include "Query.h"
 
 #include "Control.pb.h"
@@ -63,7 +64,9 @@ SQLiteDatabase::~SQLiteDatabase()
 
 void SQLiteDatabase::enableEvents()
 {
-  App()->addEventSource(m_queue);
+  // We might need to handle db request first before
+  // a new connection update shared device or session data
+  App()->addEventSource(m_queue, IEventSource::Priority::High);
 
   IDatabase::Request dbrq{.action = IDatabase::Action::CheckDatabase};
   pushRequest(dbrq);
@@ -229,13 +232,18 @@ static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::R
     logError() << "Failed to check existing session";
   }
 
+  auto currentTime = ::time(NULL);
+
   SQLiteDatabase::Query query{.type = SQLiteDatabase::QueryType::AddSession};
   status = db->runQuery(
       tkmQuery.addSession(
-          Query::Type::SQLite3, sessionInfo, App()->getDeviceData().hash(), time(NULL)),
+          Query::Type::SQLite3, sessionInfo, App()->getDeviceData().hash(), currentTime),
       query);
   if (!status) {
     logError() << "Query failed to add session";
+  } else {
+    App()->getSessionData().set_started(currentTime);
+    App()->getSessionData().set_ended(0);
   }
 
   return status;
@@ -243,13 +251,14 @@ static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::R
 
 static bool doEndSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq)
 {
-  logDebug() << "Handling DB EndSession request";
-
+  logInfo() << "Mark end for session id: " << App()->getSessionData().hash();
   SQLiteDatabase::Query query{.type = SQLiteDatabase::QueryType::EndSession};
   auto status = db->runQuery(
       tkmQuery.endSession(Query::Type::SQLite3, App()->getSessionData().hash()), query);
   if (!status) {
     logError() << "Query failed to mark end session";
+  } else {
+    App()->getSessionData().set_ended(::time(NULL));
   }
 
   return true;

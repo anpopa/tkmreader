@@ -119,7 +119,7 @@ static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   status = App()->getDatabase()->pushRequest(dbInit);
 
   if (!status) {
-    std::cout << "Connot initialize output files" << std::endl;
+    logError() << "Connot initialize output files";
     rq.action = Dispatcher::Action::Quit;
   } else {
     rq.action = Dispatcher::Action::Connect;
@@ -133,10 +133,10 @@ static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Reques
   Dispatcher::Request rq;
 
   if (App()->getConnection()->connect() < 0) {
-    std::cout << "INFO: Connection to taskmonitor failed. Retrying..." << std::endl;
     rq.action = Dispatcher::Action::Reconnect;
   } else {
     rq.action = Dispatcher::Action::SendDescriptor;
+    App()->getConnection()->enableEvents();
   }
 
   return mgr->pushRequest(rq);
@@ -146,17 +146,24 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
 {
   Dispatcher::Request rq;
 
+  if ((App()->getSessionData().hash().length() > 0) && (App()->getSessionData().ended() == 0)) {
+    IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession};
+    App()->getDatabase()->pushRequest(dbrq);
+  }
+
   // Sleep before retrying
   ::sleep(1);
+
+  logInfo() << "Reconnecting to " << App()->getDeviceData().name() << " ...";
 
   // Reset connection object
   App()->resetConnection();
 
   if (App()->getConnection()->connect() < 0) {
-    std::cout << "INFO: Connection to taskmonitor failed. Retrying..." << std::endl;
     rq.action = Dispatcher::Action::Reconnect;
   } else {
     rq.action = Dispatcher::Action::SendDescriptor;
+    App()->getConnection()->enableEvents();
   }
 
   return mgr->pushRequest(rq);
@@ -169,7 +176,6 @@ static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher:
   descriptor.set_id("Reader");
   if (!sendCollectorDescriptor(App()->getConnection()->getFD(), descriptor)) {
     logError() << "Failed to send descriptor";
-    std::cout << "ERROR: Failed to send descriptor";
     Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect};
     return mgr->pushRequest(nrq);
   }
@@ -200,8 +206,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
 
-  std::cout << "INFO: Monitor accepted session with id: " << sessionInfo.hash() << std::endl;
-  logDebug() << "Monitor accepted: " << sessionInfo.hash();
+  logInfo() << "Monitor accepted session with id: " << sessionInfo.hash();
   App()->getSessionInfo() = sessionInfo;
 
   App()->getSessionData().set_hash(sessionInfo.hash());
@@ -214,11 +219,13 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   App()->getSessionData().set_sys_proc_pressure_poll_interval(
       sessionInfo.sys_proc_pressure_poll_interval());
 
-  logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval()
-             << " procEventPollInt=" << sessionInfo.proc_event_poll_interval()
-             << " sysProcStatPollInt=" << sessionInfo.sys_proc_stat_poll_interval()
-             << " sysProcMemInfoPollInt=" << sessionInfo.sys_proc_meminfo_poll_interval()
-             << " sysProcPressurePollInt=" << sessionInfo.sys_proc_pressure_poll_interval();
+  logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval();
+  logDebug() << "            procEventPollInt=" << sessionInfo.proc_event_poll_interval();
+  logDebug() << "            sysProcStatPollInt=" << sessionInfo.sys_proc_stat_poll_interval();
+  logDebug() << "            sysProcMemInfoPollInt="
+             << sessionInfo.sys_proc_meminfo_poll_interval();
+  logDebug() << "            sysProcPressurePollInt="
+             << sessionInfo.sys_proc_pressure_poll_interval();
 
   Json::Value head;
   head["type"] = "session";
@@ -250,8 +257,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   App()->getConnection()->startCollectorTimers();
-  std::cout << "INFO: Collection started for session: " << App()->getSessionInfo().hash()
-            << std::endl;
+  logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
   return true;
 }
 
