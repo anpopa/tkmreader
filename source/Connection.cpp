@@ -118,7 +118,7 @@ Connection::Connection()
   // If the event is removed we stop the main application
   setFinalize([]() {
     logInfo() << "Monitor closed connection. Terminate";
-    Dispatcher::Request nrq{.action = Dispatcher::Action::Quit};
+    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect};
     App()->getDispatcher()->pushRequest(nrq);
   });
 }
@@ -130,6 +130,7 @@ void Connection::enableEvents()
 
 Connection::~Connection()
 {
+  logInfo() << "Connection destructed " << m_sockFd;
   if (m_sockFd > 0) {
     ::close(m_sockFd);
   }
@@ -184,7 +185,7 @@ auto Connection::connect() -> int
         }
 
         if (error != 0) {
-          logError() << "Connection failed. Socket error: " << error;
+          logError() << "Connection failed. Reason: " << strerror(error);
           return -1;
         }
       }
@@ -212,6 +213,129 @@ auto Connection::connect() -> int
   setPrepare([]() { return true; });
 
   return 0;
+}
+
+void Connection::initCollectorTimers(void)
+{
+  std::weak_ptr<Connection> weakConnection = getShared();
+
+  // ProcAcct timer
+  m_procAcctTimer = std::make_shared<Timer>("ProcAcctTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      requestMessage.set_id("GetProcAcct");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcAcct);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return App()->getConnection()->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // ProcEvent timer
+  m_procEventTimer = std::make_shared<Timer>("ProcEventTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      requestMessage.set_id("GetProcEvent");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcEventStats);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return App()->getConnection()->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // SysProcStat timer
+  m_sysProcStatTimer = std::make_shared<Timer>("SysProcStatTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      requestMessage.set_id("GetSysProcStat");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcStat);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return App()->getConnection()->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // SysProcMemInfo timer
+  m_sysProcMemInfoTimer = std::make_shared<Timer>("SysProcMemInfoTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      requestMessage.set_id("GetSysProcMemInfo");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcMeminfo);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return App()->getConnection()->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // SysProcPressure timer
+  m_sysProcPressureTimer = std::make_shared<Timer>("SysProcPressureTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      requestMessage.set_id("GetSysProcPressure");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcPressure);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return App()->getConnection()->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+}
+
+void Connection::startCollectorTimers(void)
+{
+  m_procAcctTimer->start(App()->getSessionInfo().proc_acct_poll_interval(), true);
+  App()->addEventSource(m_procAcctTimer);
+  m_procEventTimer->start(App()->getSessionInfo().proc_event_poll_interval(), true);
+  App()->addEventSource(m_procEventTimer);
+  m_sysProcStatTimer->start(App()->getSessionInfo().sys_proc_stat_poll_interval(), true);
+  App()->addEventSource(m_sysProcStatTimer);
+  m_sysProcMemInfoTimer->start(App()->getSessionInfo().sys_proc_meminfo_poll_interval(), true);
+  App()->addEventSource(m_sysProcMemInfoTimer);
+  m_sysProcPressureTimer->start(App()->getSessionInfo().sys_proc_pressure_poll_interval(), true);
+  App()->addEventSource(m_sysProcPressureTimer);
+}
+
+void Connection::stopCollectorTimers(void)
+{
+  m_procAcctTimer->stop();
+  App()->remEventSource(m_procAcctTimer);
+  m_procEventTimer->stop();
+  App()->remEventSource(m_procEventTimer);
+  m_sysProcStatTimer->stop();
+  App()->remEventSource(m_sysProcStatTimer);
+  m_sysProcMemInfoTimer->stop();
+  App()->remEventSource(m_sysProcMemInfoTimer);
+  m_sysProcPressureTimer->stop();
+  App()->remEventSource(m_sysProcPressureTimer);
 }
 
 } // namespace tkm::reader

@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <iostream>
 #include <json/json.h>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <unistd.h>
@@ -53,6 +54,7 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
 
 static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -78,6 +80,8 @@ auto Dispatcher::requestHandler(const Request &request) -> bool
     return doPrepareData(getShared(), request);
   case Dispatcher::Action::Connect:
     return doConnect(getShared(), request);
+  case Dispatcher::Action::Reconnect:
+    return doReconnect(getShared(), request);
   case Dispatcher::Action::SendDescriptor:
     return doSendDescriptor(getShared(), request);
   case Dispatcher::Action::RequestSession:
@@ -129,8 +133,28 @@ static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Reques
   Dispatcher::Request rq;
 
   if (App()->getConnection()->connect() < 0) {
-    std::cout << "Connection to taskmonitor failed" << std::endl;
-    rq.action = Dispatcher::Action::Quit;
+    std::cout << "INFO: Connection to taskmonitor failed. Retrying..." << std::endl;
+    rq.action = Dispatcher::Action::Reconnect;
+  } else {
+    rq.action = Dispatcher::Action::SendDescriptor;
+  }
+
+  return mgr->pushRequest(rq);
+}
+
+static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+{
+  Dispatcher::Request rq;
+
+  // Sleep before retrying
+  ::sleep(1);
+
+  // Reset connection object
+  App()->resetConnection();
+
+  if (App()->getConnection()->connect() < 0) {
+    std::cout << "INFO: Connection to taskmonitor failed. Retrying..." << std::endl;
+    rq.action = Dispatcher::Action::Reconnect;
   } else {
     rq.action = Dispatcher::Action::SendDescriptor;
   }
@@ -145,7 +169,8 @@ static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher:
   descriptor.set_id("Reader");
   if (!sendCollectorDescriptor(App()->getConnection()->getFD(), descriptor)) {
     logError() << "Failed to send descriptor";
-    Dispatcher::Request nrq{.action = Dispatcher::Action::Quit};
+    std::cout << "ERROR: Failed to send descriptor";
+    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect};
     return mgr->pushRequest(nrq);
   }
   logDebug() << "Sent collector descriptor";
@@ -175,6 +200,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
 
+  std::cout << "INFO: Monitor accepted session with id: " << sessionInfo.hash() << std::endl;
   logDebug() << "Monitor accepted: " << sessionInfo.hash();
   App()->getSessionInfo() = sessionInfo;
 
@@ -214,7 +240,8 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   status = App()->getDatabase()->pushRequest(dbReq);
 
   if (status) {
-    status = App()->getCommand()->trigger();
+    Dispatcher::Request srq{.action = Dispatcher::Action::StartStream};
+    status = mgr->pushRequest(srq);
   }
 
   return status;
@@ -222,86 +249,9 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
 static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
-  // ProcAcct timer
-  auto procAcctTimer = std::make_shared<Timer>("ProcAcctTimer", [&mgr]() {
-    tkm::msg::Envelope requestEnvelope;
-    tkm::msg::collector::Request requestMessage;
-
-    requestMessage.set_id("GetProcAcct");
-    requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcAcct);
-    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
-    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
-
-    return App()->getConnection()->writeEnvelope(requestEnvelope);
-  });
-  procAcctTimer->start(App()->getSessionInfo().proc_acct_poll_interval(), true);
-  App()->addEventSource(procAcctTimer);
-
-  // ProcEvent timer
-  auto procEventTimer = std::make_shared<Timer>("ProcEventTimer", [&mgr]() {
-    tkm::msg::Envelope requestEnvelope;
-    tkm::msg::collector::Request requestMessage;
-
-    requestMessage.set_id("GetProcEvent");
-    requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcEventStats);
-    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
-    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
-
-    return App()->getConnection()->writeEnvelope(requestEnvelope);
-  });
-  procEventTimer->start(App()->getSessionInfo().proc_event_poll_interval(), true);
-  App()->addEventSource(procEventTimer);
-
-  // SysProcStat timer
-  auto sysProcStatTimer = std::make_shared<Timer>("SysProcStatTimer", [&mgr]() {
-    tkm::msg::Envelope requestEnvelope;
-    tkm::msg::collector::Request requestMessage;
-
-    requestMessage.set_id("GetSysProcStat");
-    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcStat);
-    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
-    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
-
-    return App()->getConnection()->writeEnvelope(requestEnvelope);
-  });
-  sysProcStatTimer->start(App()->getSessionInfo().sys_proc_stat_poll_interval(), true);
-  App()->addEventSource(sysProcStatTimer);
-
-  // SysProcMemInfo timer
-  auto sysProcMemInfoTimer = std::make_shared<Timer>("SysProcMemInfoTimer", [&mgr]() {
-    tkm::msg::Envelope requestEnvelope;
-    tkm::msg::collector::Request requestMessage;
-
-    requestMessage.set_id("GetSysProcMemInfo");
-    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcMeminfo);
-    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
-    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
-
-    return App()->getConnection()->writeEnvelope(requestEnvelope);
-  });
-  sysProcMemInfoTimer->start(App()->getSessionInfo().sys_proc_meminfo_poll_interval(), true);
-  App()->addEventSource(sysProcMemInfoTimer);
-
-  // SysProcPressure timer
-  auto sysProcPressureTimer = std::make_shared<Timer>("SysProcPressureTimer", [&mgr]() {
-    tkm::msg::Envelope requestEnvelope;
-    tkm::msg::collector::Request requestMessage;
-
-    requestMessage.set_id("GetSysProcPressure");
-    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcPressure);
-    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
-    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
-    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
-
-    return App()->getConnection()->writeEnvelope(requestEnvelope);
-  });
-  sysProcPressureTimer->start(App()->getSessionInfo().sys_proc_pressure_poll_interval(), true);
-  App()->addEventSource(sysProcPressureTimer);
-
+  App()->getConnection()->startCollectorTimers();
+  std::cout << "INFO: Collection started for session: " << App()->getSessionInfo().hash()
+            << std::endl;
   return true;
 }
 
@@ -378,7 +328,7 @@ static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request
   std::cout << "--------------------------------------------------" << std::endl;
 
   // Trigger the next command
-  return App()->getCommand()->trigger();
+  return doQuit(mgr, rq);
 }
 
 static bool doQuit(const shared_ptr<Dispatcher>, const Dispatcher::Request &)

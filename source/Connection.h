@@ -22,6 +22,7 @@
 #include "../bswinfra/source/Exceptions.h"
 #include "../bswinfra/source/IApplication.h"
 #include "../bswinfra/source/Pollable.h"
+#include "../bswinfra/source/Timer.h"
 
 using namespace bswi::log;
 using namespace bswi::event;
@@ -56,6 +57,18 @@ public:
     }
     return true;
   }
+
+public:
+  void initCollectorTimers(void);
+  void startCollectorTimers(void);
+  void stopCollectorTimers(void);
+
+private:
+  std::shared_ptr<Timer> m_procAcctTimer = nullptr;
+  std::shared_ptr<Timer> m_procEventTimer = nullptr;
+  std::shared_ptr<Timer> m_sysProcStatTimer = nullptr;
+  std::shared_ptr<Timer> m_sysProcMemInfoTimer = nullptr;
+  std::shared_ptr<Timer> m_sysProcPressureTimer = nullptr;
 
 private:
   std::unique_ptr<EnvelopeReader> m_reader = nullptr;

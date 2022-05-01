@@ -7,7 +7,6 @@ set(BINARY_SRC
     JsonWriter.cpp
     Dispatcher.cpp
     Connection.cpp
-    Command.cpp
     Application.cpp
     Arguments.cpp
     SQLiteDatabase.cpp

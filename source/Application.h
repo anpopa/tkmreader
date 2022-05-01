@@ -17,7 +17,6 @@
 #include <utility>
 
 #include "Arguments.h"
-#include "Command.h"
 #include "Connection.h"
 #include "Defaults.h"
 #include "Dispatcher.h"
@@ -70,13 +69,14 @@ public:
   }
 
   auto getDispatcher() -> const std::shared_ptr<Dispatcher> { return m_dispatcher; }
-  auto getCommand() -> const std::shared_ptr<Command> { return m_command; }
   auto getConnection() -> const std::shared_ptr<Connection> { return m_connection; }
   auto getDatabase() -> const std::shared_ptr<SQLiteDatabase> { return m_database; }
   auto getArguments() -> const std::shared_ptr<Arguments> { return m_arguments; }
   auto getSessionInfo() -> tkm::msg::monitor::SessionInfo & { return m_sessionInfo; }
   auto getDeviceData() -> tkm::msg::control::DeviceData & { return m_deviceData; }
   auto getSessionData() -> tkm::msg::control::SessionData & { return m_sessionData; }
+
+  void resetConnection(void);
 
 public:
   Application(Application const &) = delete;
@@ -85,7 +85,6 @@ public:
 private:
   std::shared_ptr<Arguments> m_arguments = nullptr;
   std::shared_ptr<Connection> m_connection = nullptr;
-  std::shared_ptr<Command> m_command = nullptr;
   std::shared_ptr<Dispatcher> m_dispatcher = nullptr;
   std::shared_ptr<SQLiteDatabase> m_database = nullptr;
 

@@ -91,9 +91,6 @@ auto main(int argc, char **argv) -> int
   try {
     Application app{"TKM-Reader", "TaskMonitor Reader", args};
 
-    Command::Request startStreamRequest{.action = Command::Action::StartStream};
-    app.getCommand()->addRequest(startStreamRequest);
-
     // Prepare output data
     Dispatcher::Request prepareRequest{
         .action = Dispatcher::Action::PrepareData,

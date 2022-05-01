@@ -50,13 +50,21 @@ Application::Application(const string &name,
   m_database->enableEvents();
 
   m_connection = std::make_shared<Connection>();
+  m_connection->initCollectorTimers();
   m_connection->enableEvents();
 
   m_dispatcher = std::make_unique<Dispatcher>();
   m_dispatcher->enableEvents();
+}
 
-  m_command = std::make_unique<Command>();
-  m_command->enableEvents();
+void Application::resetConnection()
+{
+  m_connection->stopCollectorTimers();
+  m_connection.reset();
+
+  m_connection = std::make_shared<Connection>();
+  m_connection->initCollectorTimers();
+  m_connection->enableEvents();
 }
 
 } // namespace tkm::reader

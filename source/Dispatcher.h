@@ -33,6 +33,7 @@ public:
   enum class Action {
     PrepareData,
     Connect,
+    Reconnect,
     SendDescriptor,
     RequestSession,
     SetSession,
