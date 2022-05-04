@@ -138,15 +138,17 @@ Connection::~Connection()
 
 auto Connection::connect() -> int
 {
+  int port = 0;
+
   std::string monitorAddress = App()->getArguments()->getFor(Arguments::Key::Address);
   struct hostent *monitor = gethostbyname(monitorAddress.c_str());
 
   m_addr.sin_family = AF_INET;
-  bcopy(monitor->h_addr, (char *) &m_addr.sin_addr.s_addr, (size_t) monitor->h_length);
-  auto port = std::stoi(tkmDefaults.getFor(Defaults::Default::Port));
+  memcpy(monitor->h_addr, (char *) &m_addr.sin_addr.s_addr, (size_t) monitor->h_length);
   try {
     port = std::stoi(App()->getArguments()->getFor(Arguments::Key::Port));
   } catch (const std::exception &e) {
+    port = std::stoi(tkmDefaults.getFor(Defaults::Default::Port));
     logWarn() << "Cannot convert port number from config (using 3357): " << e.what();
   }
   m_addr.sin_port = htons(port);

@@ -41,7 +41,7 @@ Application::Application(const string &name,
     std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::DatabasePath));
   }
   if (std::filesystem::exists(App()->getArguments()->getFor(Arguments::Key::JsonPath))) {
-    logWarn() << "Removing existing jason output file: "
+    logWarn() << "Removing existing json output file: "
               << App()->getArguments()->getFor(Arguments::Key::JsonPath);
     std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::JsonPath));
   }
