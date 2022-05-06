@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(TaskMonitorReader)
 
+set(CMAKE_PROJECT_HOMEPAGE_URL "https://gitlab.com/taskmonitor/tkm-reader")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -10,16 +12,33 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # BaseSoftwareInfrastructure
 set(BSWINFRA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bswinfra)
 set(INTERFACES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/interfaces)
-set(CMAKE_MODULE_PATH "${BSWINFRA_DIR}/cmake" "${INTERFACES_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake" "${INTERFACES_DIR}/cmake")
 
 message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
 
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
 
+# Build time configuration setup
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND git --git-dir "${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse --short HEAD
+        OUTPUT_VARIABLE GIT_SHA1
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+else(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    set(GIT_SHA1 "")
+endif(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+
 # Enable collector interfaces
 set(WITH_COLLECTOR_CONTROL ON)
 
+set(PROJECT_VERSION_MAJOR "1")
+set(PROJECT_VERSION_MINOR "0")
+set(PROJECT_VERSION_PATCH ${GIT_SHA1})
+
+include(GNUInstallDirs)
+include(Packing)
 include(BSWInfra)
 include(TaskMonitorInterfaces)
 
@@ -43,17 +62,6 @@ if(CMAKE_BUILD_TYPE STREQUAL Coverage)
     include(CoverageTarget)
 endif()
 
-# Build time configuration setup
-if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    execute_process(
-        COMMAND git --git-dir "${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse --short HEAD
-        OUTPUT_VARIABLE GIT_SHA1
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-else(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    set(GIT_SHA1 "")
-endif(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-
 configure_file(
     ${CMAKE_SOURCE_DIR}/shared/Defaults.h.in
     ${CMAKE_BINARY_DIR}/shared/Defaults.h)
@@ -68,7 +76,7 @@ include_directories(${CMAKE_BINARY_DIR}/shared)
 
 # Dependencies
 find_package          (PkgConfig REQUIRED)
-find_package		  (Threads REQUIRED)
+find_package          (Threads REQUIRED)
 set                   (LIBS ${LIBS} pthread)
 
 # Use jsoncpp
@@ -119,9 +127,8 @@ add_compile_options (
     -Wredundant-decls
     )
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-    install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION /usr/share/licenses/tkmreader)
-endif()
+# Install license file
+install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/taskmonitor/)
 
 # Status reporting
 message (STATUS "SYSTEM_TYPE: "          ${CMAKE_SYSTEM_NAME})

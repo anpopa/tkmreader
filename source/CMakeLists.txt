@@ -14,4 +14,4 @@ set(BINARY_SRC
     )
 add_executable(${BINARY_NAME} ${BINARY_SRC})
 target_link_libraries(${BINARY_NAME} ${SQLite3_LIBRARIES} ${LIBS} BSWInfra TaskMonitorInterfaces)
-install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION bin)
+install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
