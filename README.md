@@ -1,5 +1,5 @@
 # Task Monitor Reader
-Simple reader application for taskmonitor
+Simple reader application for **TaskMonitor**
 
 ## Getting started
 This is a host tool to connect and read data stream from taskmonitor service.
@@ -17,14 +17,13 @@ TKM-Reader depends on the following libraries
 | sqlite3 | https://www.sqlite.org/index.html | Output sqlite3 database |
 | jsoncpp | https://github.com/open-source-parsers/jsoncpp | Emit Json output |
 | protobuf | https://developers.google.com/protocol-buffers | Data serialization |
-| libsystemd | https://github.com/systemd/systemd/tree/main/src/libsystemd | Optional if WITH_SYSTEMD is ON 
 
 ## Build
 ### Compile options
 
 | Option | Default | Info |
 | ------ | ------ | ------ |
-| WITH_SYSTEMD | ON | Enable systemd service and watchdog support |
+| WITH_SYSLOG | OFF | Print log output to syslog instead of stdout |
 
 ### Local Build
 `mkdir build && cd build && cmake .. && make `
