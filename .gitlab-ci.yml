@@ -32,7 +32,17 @@ build:
     GIT_SUBMODULE_STRATEGY: recursive
   before_script:
     - apt update
-    - apt -y install build-essential cmake pkgconf libprotobuf-dev protobuf-compiler libjsoncpp-dev libsqlite3-dev
+    - apt -y install rpm build-essential cmake pkgconf libprotobuf-dev protobuf-compiler libjsoncpp-dev libsqlite3-dev
   script:
     - mkdir build && cd build && cmake .. && make
 
+release-job:
+  script:
+    - cd build
+    - cpack -G RPM
+    - cpack -G DEB
+  artifacts:
+    paths:
+      - build/packages/tkmreader*
+  rules:
+    - if: $CI_COMMIT_TAG
