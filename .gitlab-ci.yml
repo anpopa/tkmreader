@@ -39,7 +39,9 @@ build:
 
 package:
   stage: package
+  needs: ["build"]
   script:
+    - cd build
     - cpack -G RPM
     - cpack -G DEB
   artifacts:
