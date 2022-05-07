@@ -1,4 +1,3 @@
-# CMake general setup
 cmake_minimum_required(VERSION 3.7.2)
 project(TaskMonitorReader)
 
@@ -30,6 +29,11 @@ else(EXISTS "${CMAKE_SOURCE_DIR}/.git")
     set(GIT_SHA1 "")
 endif(EXISTS "${CMAKE_SOURCE_DIR}/.git")
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+        "Choose the type of build: Debug, Release, RelWithDebInfo, MinSizeRel." FORCE)
+endif()
+
 # Enable collector interfaces
 set(WITH_COLLECTOR_CONTROL ON)
 
@@ -41,11 +45,6 @@ include(GNUInstallDirs)
 include(Packing)
 include(BSWInfra)
 include(TaskMonitorInterfaces)
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-        "Choose the type of build: Debug, Release, RelWithDebInfo, MinSizeRel." FORCE)
-endif()
 
 # Add support for coverage analysis
 if(CMAKE_BUILD_TYPE STREQUAL Coverage)
