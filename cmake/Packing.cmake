@@ -23,7 +23,7 @@ set(CPACK_RPM_CHANGELOG_FILE "${CMAKE_SOURCE_DIR}/CHANGELOG")
 set(CPACK_RPM_PACKAGE_DESCRIPTION ${CPACK_PACKAGE_DESCRIPTION_SUMMARY})
 set(CPACK_RPM_PACKAGE_GROUP "Development/Tools")
 set(CPACK_RPM_PACKAGE_REQUIRES
-  "sqlite >= 3.31, jsoncpp >= 1.9.4, protobuf >= 3.6.1")
+  "sqlite >= 3.36, jsoncpp >= 1.9.4, protobuf >= 3.14.0")
 
 # DEB
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
@@ -31,6 +31,6 @@ set(CPACK_DEBIAN_DEBUGINFO_PACKAGE OFF)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Alin Popa")
 set(CPACK_DEBIAN_PACKAGE_SECTION "Utilities")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31.1), libprotobuf17 (>=3.6.1)")
+  "libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.34), libprotobuf23 (>=3.12)")
 
 include(CPack)
