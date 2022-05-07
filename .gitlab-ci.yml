@@ -39,9 +39,13 @@ build:
 
 package:
   stage: package
-  needs: ["build"]
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  before_script:
+    - apt update
+    - apt -y install rpm build-essential cmake pkgconf libprotobuf-dev protobuf-compiler libjsoncpp-dev libsqlite3-dev
   script:
-    - cd build
+    - mkdir build && cd build && cmake .. && make
     - cpack -G RPM
     - cpack -G DEB
   artifacts:
