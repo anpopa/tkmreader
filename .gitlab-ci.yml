@@ -20,6 +20,7 @@ image: debian:latest
 stages:
 - test
 - build
+- package
 
 sast:
   stage: test
@@ -36,9 +37,9 @@ build:
   script:
     - mkdir build && cd build && cmake .. && make
 
-release-job:
+package:
+  stage: package
   script:
-    - cd build
     - cpack -G RPM
     - cpack -G DEB
   artifacts:
