@@ -31,6 +31,6 @@ set(CPACK_DEBIAN_DEBUGINFO_PACKAGE OFF)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Alin Popa")
 set(CPACK_DEBIAN_PACKAGE_SECTION "Utilities")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.34), libprotobuf23 (>=3.12)")
+  "libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31), libprotobuf17 (>=3.6)")
 
 include(CPack)
