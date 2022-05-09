@@ -144,7 +144,7 @@ auto Connection::connect() -> int
   struct hostent *monitor = gethostbyname(monitorAddress.c_str());
 
   m_addr.sin_family = AF_INET;
-  memcpy(monitor->h_addr, (char *) &m_addr.sin_addr.s_addr, (size_t) monitor->h_length);
+  memcpy(&m_addr.sin_addr.s_addr, monitor->h_addr, (size_t) monitor->h_length);
   try {
     port = std::stoi(App()->getArguments()->getFor(Arguments::Key::Port));
   } catch (const std::exception &e) {
