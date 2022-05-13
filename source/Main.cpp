@@ -84,7 +84,8 @@ auto main(int argc, char **argv) -> int
     cout << "     --port, -p      <int>     Device port number (default 3357)\n";
     cout << "  Output:\n";
     cout << "     --init, -i                Force output initialization if files exist\n";
-    cout << "     --database, -d  <string>  Path to output database file\n";
+    cout << "     --database, -d  <string>  Path to output database file. If not set DB output is "
+            "disabled\n";
     cout << "     --json, -j      <string>  Path to output json file. Use STDOUT if not set\n";
     cout << "  Help:\n";
     cout << "     --help, -h                Print this help\n\n";
