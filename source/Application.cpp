@@ -35,19 +35,27 @@ Application::Application(const string &name,
 
   m_arguments = std::make_shared<Arguments>(args);
 
-  if (std::filesystem::exists(App()->getArguments()->getFor(Arguments::Key::DatabasePath))) {
-    logWarn() << "Removing existing database output file: "
-              << App()->getArguments()->getFor(Arguments::Key::DatabasePath);
-    std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::DatabasePath));
-  }
-  if (std::filesystem::exists(App()->getArguments()->getFor(Arguments::Key::JsonPath))) {
-    logWarn() << "Removing existing json output file: "
-              << App()->getArguments()->getFor(Arguments::Key::JsonPath);
-    std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::JsonPath));
+  if (m_arguments->hasFor(Arguments::Key::Init)) {
+    if (m_arguments->hasFor(Arguments::Key::DatabasePath)) {
+      if (std::filesystem::exists(m_arguments->getFor(Arguments::Key::DatabasePath))) {
+        logWarn() << "Removing existing database output file: "
+                  << m_arguments->getFor(Arguments::Key::DatabasePath);
+        std::filesystem::remove(m_arguments->getFor(Arguments::Key::DatabasePath));
+      }
+    }
+    if (m_arguments->hasFor(Arguments::Key::JsonPath)) {
+      if (std::filesystem::exists(m_arguments->getFor(Arguments::Key::JsonPath))) {
+        logWarn() << "Removing existing json output file: "
+                  << m_arguments->getFor(Arguments::Key::JsonPath);
+        std::filesystem::remove(m_arguments->getFor(Arguments::Key::JsonPath));
+      }
+    }
   }
 
-  m_database = std::make_shared<SQLiteDatabase>();
-  m_database->enableEvents();
+  if (m_arguments->hasFor(Arguments::Key::DatabasePath)) {
+    m_database = std::make_shared<SQLiteDatabase>();
+    m_database->enableEvents();
+  }
 
   m_connection = std::make_shared<Connection>();
 

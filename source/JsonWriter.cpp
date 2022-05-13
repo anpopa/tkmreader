@@ -20,20 +20,33 @@
 namespace tkm::reader
 {
 
-static std::unique_ptr<std::ofstream> m_outStream = nullptr;
 JsonWriter *JsonWriter::instance = nullptr;
+static std::unique_ptr<std::ofstream> m_outStream = nullptr;
+static bool useStdOut = true;
 
 JsonWriter::JsonWriter()
 {
-  m_outStream = std::make_unique<std::ofstream>(
-      App()->getArguments()->getFor(Arguments::Key::JsonPath), std::ofstream::out);
+  if (App()->getArguments()->hasFor(Arguments::Key::JsonPath)) {
+    m_outStream =
+        std::make_unique<std::ofstream>(App()->getArguments()->getFor(Arguments::Key::JsonPath),
+                                        std::ofstream::out | std::ofstream::app);
+
+    if (m_outStream->tellp() > 0) {
+      *m_outStream << std::endl;
+    }
+    useStdOut = false;
+  }
   builder["commentStyle"] = "None";
   builder["indentation"] = "";
 }
 
 void JsonWriter::Payload::print()
 {
-  *m_outStream << m_stream.str() << std::endl;
+  if (useStdOut) {
+    std::cout << m_stream.str() << std::endl;
+  } else {
+    *m_outStream << m_stream.str() << std::endl;
+  }
 }
 
 } // namespace tkm::reader

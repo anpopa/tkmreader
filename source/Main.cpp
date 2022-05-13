@@ -11,6 +11,7 @@
 
 #include "Application.h"
 #include "Arguments.h"
+#include "Defaults.h"
 
 #include <csignal>
 #include <cstdlib>
@@ -36,6 +37,7 @@ auto main(int argc, char **argv) -> int
   int c;
 
   struct option longopts[] = {{"name", required_argument, nullptr, 'n'},
+                              {"init", no_argument, nullptr, 'i'},
                               {"address", required_argument, nullptr, 'a'},
                               {"port", required_argument, nullptr, 'p'},
                               {"database", required_argument, nullptr, 'd'},
@@ -43,10 +45,14 @@ auto main(int argc, char **argv) -> int
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
-  while ((c = getopt_long(argc, argv, "n:a:p:d:j:h", longopts, &longIndex)) != -1) {
+  while ((c = getopt_long(argc, argv, "n:a:p:d:j:ih", longopts, &longIndex)) != -1) {
     switch (c) {
     case 'n':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
+      break;
+    case 'i':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Init,
+                                                         tkmDefaults.valFor(Defaults::Val::True)));
       break;
     case 'a':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Address, optarg));
@@ -77,8 +83,9 @@ auto main(int argc, char **argv) -> int
     cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
     cout << "     --port, -p      <int>     Device port number (default 3357)\n";
     cout << "  Output:\n";
+    cout << "     --init, -i                Force output initialization if files exist\n";
     cout << "     --database, -d  <string>  Path to output database file\n";
-    cout << "     --json, -j      <string>  Path to output json file\n";
+    cout << "     --json, -j      <string>  Path to output json file. Use STDOUT if not set\n";
     cout << "  Help:\n";
     cout << "     --help, -h                Print this help\n\n";
 

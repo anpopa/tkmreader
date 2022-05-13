@@ -115,8 +115,10 @@ static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   App()->getDeviceData().set_port(std::stoi(App()->getArguments()->getFor(Arguments::Key::Port)));
   App()->getDeviceData().set_hash(hashForDevice(App()->getDeviceData()));
 
-  IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
-  status = App()->getDatabase()->pushRequest(dbInit);
+  if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
+    IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
+    status = App()->getDatabase()->pushRequest(dbInit);
+  }
 
   if (!status) {
     logError() << "Connot initialize output files";
@@ -147,8 +149,10 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
   Dispatcher::Request rq;
 
   if ((App()->getSessionData().hash().length() > 0) && (App()->getSessionData().ended() == 0)) {
-    IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession};
-    App()->getDatabase()->pushRequest(dbrq);
+    if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
+      IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession};
+      App()->getDatabase()->pushRequest(dbrq);
+    }
   }
 
   // Sleep before retrying
@@ -243,8 +247,10 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
   writeJsonStream() << head;
 
-  IDatabase::Request dbReq = {.action = IDatabase::Action::AddSession, .bulkData = rq.bulkData};
-  status = App()->getDatabase()->pushRequest(dbReq);
+  if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
+    IDatabase::Request dbReq = {.action = IDatabase::Action::AddSession, .bulkData = rq.bulkData};
+    status = App()->getDatabase()->pushRequest(dbReq);
+  }
 
   if (status) {
     Dispatcher::Request srq{.action = Dispatcher::Action::StartStream};
@@ -300,8 +306,12 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
     break;
   }
 
-  IDatabase::Request dbReq = {.action = IDatabase::Action::AddData, .bulkData = rq.bulkData};
-  return App()->getDatabase()->pushRequest(dbReq);
+  if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
+    IDatabase::Request dbReq = {.action = IDatabase::Action::AddData, .bulkData = rq.bulkData};
+    return App()->getDatabase()->pushRequest(dbReq);
+  }
+
+  return true;
 }
 
 static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)

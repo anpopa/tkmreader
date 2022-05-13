@@ -15,6 +15,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake
 
 message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
 
+option(WITH_SYSLOG "Build with syslog logger backend" Y)
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
 
@@ -66,7 +67,7 @@ configure_file(
     ${CMAKE_BINARY_DIR}/shared/Defaults.h)
     
 if(WITH_TIDY)
-	set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
 # Header files
@@ -132,5 +133,6 @@ install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/sh
 # Status reporting
 message (STATUS "SYSTEM_TYPE: "          ${CMAKE_SYSTEM_NAME})
 message (STATUS "CMAKE_BUILD_TYPE: "     ${CMAKE_BUILD_TYPE})
+message (STATUS "WITH_SYSLOG: "          ${WITH_SYSLOG})
 message (STATUS "WITH_TESTS: "           ${WITH_TESTS})
 message (STATUS "WITH_TIDY: "            ${WITH_TIDY})

@@ -51,9 +51,16 @@ SQLiteDatabase::SQLiteDatabase(void)
 {
   fs::path addr(App()->getArguments()->getFor(Arguments::Key::DatabasePath));
   logDebug() << "Using DB file: " << addr.string();
+
   if (sqlite3_open(addr.c_str(), &m_db) != SQLITE_OK) {
-    sqlite3_close(m_db);
-    throw std::runtime_error(sqlite3_errmsg(m_db));
+    logWarn() << "SQLite3 database file invalid. Force reinit..."
+              << App()->getArguments()->getFor(Arguments::Key::DatabasePath);
+    std::filesystem::remove(App()->getArguments()->getFor(Arguments::Key::DatabasePath));
+
+    if (sqlite3_open(addr.c_str(), &m_db) != SQLITE_OK) {
+      sqlite3_close(m_db);
+      throw std::runtime_error(sqlite3_errmsg(m_db));
+    }
   }
 }
 
