@@ -75,8 +75,8 @@ auto main(int argc, char **argv) -> int
   }
 
   if (help) {
-    cout << "tkm-reader: read data stream from a taskmonitor device"
-         << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
+    cout << "tkm-reader: read data stream from a taskmonitor device\n"
+         << "version: " << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
     cout << "Usage: tkm-reader [OPTIONS] \n\n";
     cout << "  General:\n";
     cout << "     --name, -n      <string>  Device name (default unknown)\n";
