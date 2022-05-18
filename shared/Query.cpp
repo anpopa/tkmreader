@@ -10,6 +10,7 @@
  */
 
 #include "Query.h"
+#include <cstdint>
 #include <string>
 
 namespace tkm
@@ -321,6 +322,71 @@ auto Query::createTables(Query::Type type) -> std::string
     out << "CONSTRAINT KFSession FOREIGN KEY(" << m_procAcctColumn.at(ProcAcctColumn::SessionId)
         << ") REFERENCES " << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
         << ") ON DELETE CASCADE);";
+
+    // ProcInfo table
+    out << "CREATE TABLE IF NOT EXISTS " << m_procInfoTableName << " (";
+    if (type == Query::Type::SQLite3) {
+      out << m_procInfoColumn.at(ProcInfoColumn::Id) << " INTEGER PRIMARY KEY, "
+          << m_procInfoColumn.at(ProcInfoColumn::SystemTime) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::MonotonicTime) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::ReceiveTime) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::Comm) << " TEXT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::Pid) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::PPid) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxName) << " TEXT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CpuTime) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::MemVmRSS) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::SessionId) << " INTEGER NOT NULL, ";
+    } else {
+      out << m_procInfoColumn.at(ProcInfoColumn::Id) << " SERIAL PRIMARY KEY, "
+          << m_procInfoColumn.at(ProcInfoColumn::SystemTime) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::MonotonicTime) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::ReceiveTime) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::Comm) << " TEXT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::Pid) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::PPid) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxName) << " TEXT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CpuTime) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::MemVmRSS) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::SessionId) << " INTEGER NOT NULL, ";
+    }
+    out << "CONSTRAINT KFSession FOREIGN KEY(" << m_procInfoColumn.at(ProcInfoColumn::SessionId)
+        << ") REFERENCES " << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
+        << ") ON DELETE CASCADE);";
+
+    // ContextInfo table
+    out << "CREATE TABLE IF NOT EXISTS " << m_contextInfoTableName << " (";
+    if (type == Query::Type::SQLite3) {
+      out << m_contextInfoColumn.at(ContextInfoColumn::Id) << " INTEGER PRIMARY KEY, "
+          << m_contextInfoColumn.at(ContextInfoColumn::SystemTime) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::MonotonicTime) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::ReceiveTime) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxName) << " TEXT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuTime) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalMemVmRSS) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << " INTEGER NOT NULL, ";
+    } else {
+      out << m_contextInfoColumn.at(ContextInfoColumn::Id) << " SERIAL PRIMARY KEY, "
+          << m_contextInfoColumn.at(ContextInfoColumn::SystemTime) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::MonotonicTime) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::ReceiveTime) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxName) << " TEXT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuTime) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalMemVmRSS) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << " INTEGER NOT NULL, ";
+    }
+    out << "CONSTRAINT KFSession FOREIGN KEY("
+        << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << ") REFERENCES "
+        << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
+        << ") ON DELETE CASCADE);";
   }
 
   return out.str();
@@ -337,7 +403,9 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_sysProcMeminfoTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << ";";
+    out << "DROP TABLE IF EXISTS " << m_procInfoTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procEventTableName << ";";
+    out << "DROP TABLE IF EXISTS " << m_contextInfoTableName << ";";
   } else if (type == Query::Type::PostgreSQL) {
     out << "DROP TABLE IF EXISTS " << m_devicesTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sessionsTableName << " CASCADE;";
@@ -345,7 +413,9 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_sysProcMeminfoTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << " CASCADE;";
+    out << "DROP TABLE IF EXISTS " << m_procInfoTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procEventTableName << " CASCADE;";
+    out << "DROP TABLE IF EXISTS " << m_contextInfoTableName << " CASCADE;";
   }
 
   return out.str();
@@ -850,6 +920,88 @@ auto Query::addData(Query::Type type,
           << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " LIKE "
           << "'" << sessionHash << "' AND EndTimestamp = 0));";
     }
+  }
+
+  return out.str();
+}
+
+auto Query::addData(Query::Type type,
+                    const std::string &sessionHash,
+                    const tkm::msg::monitor::ProcInfo &procInfo,
+                    uint64_t systemTime,
+                    uint64_t monotonicTime,
+                    uint64_t receiveTime) -> std::string
+{
+  std::stringstream out;
+
+  if ((type == Query::Type::SQLite3) || (type == Query::Type::PostgreSQL)) {
+    out << "INSERT INTO " << m_procInfoTableName << " ("
+        << m_procInfoColumn.at(ProcInfoColumn::SystemTime) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::MonotonicTime) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::ReceiveTime) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::Comm) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::Pid) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::PPid) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::CtxId) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::CtxName) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::CpuTime) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::MemVmRSS) << ","
+        << m_procInfoColumn.at(ProcInfoColumn::SessionId) << ") VALUES ('" << systemTime << "', '"
+        << monotonicTime << "', '" << receiveTime << "', '" << procInfo.comm() << "', '"
+        << procInfo.pid() << "', '" << procInfo.ppid() << "', '"
+        << static_cast<uint32_t>(procInfo.ctx_id()) << "', '" << procInfo.ctx_name() << "', '"
+        << procInfo.cpu_time() << "', '" << procInfo.cpu_percent() << "', '" << procInfo.mem_vmrss()
+        << "', ";
+  }
+
+  if (type == Query::Type::SQLite3) {
+    out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+        << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " IS "
+        << "'" << sessionHash << "' AND EndTimestamp = 0));";
+  } else {
+    out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+        << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " LIKE "
+        << "'" << sessionHash << "' AND EndTimestamp = 0));";
+  }
+
+  return out.str();
+}
+
+auto Query::addData(Query::Type type,
+                    const std::string &sessionHash,
+                    const tkm::msg::monitor::ContextInfo &ctxInfo,
+                    uint64_t systemTime,
+                    uint64_t monotonicTime,
+                    uint64_t receiveTime) -> std::string
+{
+  std::stringstream out;
+
+  if ((type == Query::Type::SQLite3) || (type == Query::Type::PostgreSQL)) {
+    out << "INSERT INTO " << m_contextInfoTableName << " ("
+        << m_contextInfoColumn.at(ContextInfoColumn::SystemTime) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::MonotonicTime) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::ReceiveTime) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::CtxName) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuTime) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::TotalMemVmRSS) << ","
+        << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << ") VALUES ('" << systemTime
+        << "', '" << monotonicTime << "', '" << receiveTime << "', '"
+        << static_cast<uint32_t>(ctxInfo.ctx_id()) << "', '" << ctxInfo.ctx_name() << "', '"
+        << ctxInfo.total_cpu_time() << "', '" << ctxInfo.total_cpu_percent() << "', '"
+        << ctxInfo.total_mem_vmrss() << "', ";
+  }
+
+  if (type == Query::Type::SQLite3) {
+    out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+        << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " IS "
+        << "'" << sessionHash << "' AND EndTimestamp = 0));";
+  } else {
+    out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+        << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " LIKE "
+        << "'" << sessionHash << "' AND EndTimestamp = 0));";
   }
 
   return out.str();

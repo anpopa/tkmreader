@@ -39,6 +39,11 @@ namespace tkm::reader
 static auto splitString(const std::string &s, char delim) -> std::vector<std::string>;
 static void
 printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint64_t monotonicTime);
+static void
+printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint64_t monotonicTime);
+static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
+                             uint64_t systemTime,
+                             uint64_t monotonicTime);
 static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
                            uint64_t systemTime,
                            uint64_t monotonicTime);
@@ -215,6 +220,9 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
   App()->getSessionData().set_hash(sessionInfo.hash());
   App()->getSessionData().set_proc_acct_poll_interval(sessionInfo.proc_acct_poll_interval());
+  App()->getSessionData().set_proc_info_poll_interval(sessionInfo.proc_info_poll_interval());
+  App()->getSessionData().set_context_information_poll_interval(
+      sessionInfo.context_information_poll_interval());
   App()->getSessionData().set_proc_event_poll_interval(sessionInfo.proc_event_poll_interval());
   App()->getSessionData().set_sys_proc_stat_poll_interval(
       sessionInfo.sys_proc_stat_poll_interval());
@@ -224,11 +232,14 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
       sessionInfo.sys_proc_pressure_poll_interval());
 
   logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval();
-  logDebug() << "            procEventPollInt=" << sessionInfo.proc_event_poll_interval();
-  logDebug() << "            sysProcStatPollInt=" << sessionInfo.sys_proc_stat_poll_interval();
-  logDebug() << "            sysProcMemInfoPollInt="
+  logDebug() << "            procInfoPollInterval=" << sessionInfo.proc_info_poll_interval();
+  logDebug() << "            procEventPollInterval=" << sessionInfo.proc_event_poll_interval();
+  logDebug() << "            contextInfoPollInterval="
+             << sessionInfo.context_information_poll_interval();
+  logDebug() << "            sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval();
+  logDebug() << "            sysProcMemInfoPollInterval="
              << sessionInfo.sys_proc_meminfo_poll_interval();
-  logDebug() << "            sysProcPressurePollInt="
+  logDebug() << "            sysProcPressurePollInterval="
              << sessionInfo.sys_proc_pressure_poll_interval();
 
   Json::Value head;
@@ -239,7 +250,9 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
   Json::Value intervals;
   intervals["proc_acct_poll"] = sessionInfo.proc_acct_poll_interval();
+  intervals["proc_info_poll"] = sessionInfo.proc_info_poll_interval();
   intervals["proc_event_poll"] = sessionInfo.proc_event_poll_interval();
+  intervals["context_info_poll"] = sessionInfo.context_information_poll_interval();
   intervals["sys_proc_stat_poll"] = sessionInfo.sys_proc_stat_poll_interval();
   intervals["sys_proc_meminfo_poll"] = sessionInfo.sys_proc_meminfo_poll_interval();
   intervals["sys_proc_pressure_poll"] = sessionInfo.sys_proc_pressure_poll_interval();
@@ -278,10 +291,22 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
     printProcAcct(procAcct, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
+  case tkm::msg::monitor::Data_What_ProcInfo: {
+    tkm::msg::monitor::ProcInfo procInfo;
+    data.payload().UnpackTo(&procInfo);
+    printProcInfo(procInfo, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
   case tkm::msg::monitor::Data_What_ProcEvent: {
     tkm::msg::monitor::ProcEvent procEvent;
     data.payload().UnpackTo(&procEvent);
     printProcEvent(procEvent, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_ContextInfo: {
+    tkm::msg::monitor::ContextInfo ctxInfo;
+    data.payload().UnpackTo(&ctxInfo);
+    printContextInfo(ctxInfo, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
   case tkm::msg::monitor::Data_What_SysProcStat: {
@@ -423,6 +448,54 @@ printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint
   thrashing["thrashing_delay_total"] = acct.thrashing().thrashing_delay_total();
   thrashing["thrashing_delay_average"] = acct.thrashing().thrashing_delay_average();
   head["thrashing"] = thrashing;
+
+  writeJsonStream() << head;
+}
+
+static void
+printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint64_t monotonicTime)
+{
+  Json::Value head;
+  Json::Value body;
+
+  head["type"] = "procinfo";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  body["comm"] = info.comm();
+  body["pid"] = info.pid();
+  body["ppid"] = info.ppid();
+  body["ctx_id"] = info.ctx_id();
+  body["ctx_name"] = info.ctx_name();
+  body["cpu_time"] = info.cpu_time();
+  body["cpu_percent"] = info.cpu_percent();
+  body["mem_vmrss"] = info.mem_vmrss();
+  head["procinfo"] = body;
+
+  writeJsonStream() << head;
+}
+
+static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
+                             uint64_t systemTime,
+                             uint64_t monotonicTime)
+{
+  Json::Value head;
+  Json::Value body;
+
+  head["type"] = "ctxinfo";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  body["ctx_id"] = info.ctx_id();
+  body["ctx_name"] = info.ctx_name();
+  body["total_cpu_time"] = info.total_cpu_time();
+  body["total_cpu_percent"] = info.total_cpu_percent();
+  body["total_mem_vmrss"] = info.total_mem_vmrss();
+  head["ctxinfo"] = body;
 
   writeJsonStream() << head;
 }

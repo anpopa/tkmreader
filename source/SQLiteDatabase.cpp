@@ -288,6 +288,28 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
         query);
   };
 
+  auto writeProcInfo = [&db, &rq, &status, &query](const std::string &sessionHash,
+                                                   const tkm::msg::monitor::ProcInfo &info,
+                                                   uint64_t systemTime,
+                                                   uint64_t monotonicTime,
+                                                   uint64_t receiveTime) {
+    status = db->runQuery(
+        tkmQuery.addData(
+            Query::Type::SQLite3, sessionHash, info, systemTime, monotonicTime, receiveTime),
+        query);
+  };
+
+  auto writeContextInfo = [&db, &rq, &status, &query](const std::string &sessionHash,
+                                                      const tkm::msg::monitor::ContextInfo &info,
+                                                      uint64_t systemTime,
+                                                      uint64_t monotonicTime,
+                                                      uint64_t receiveTime) {
+    status = db->runQuery(
+        tkmQuery.addData(
+            Query::Type::SQLite3, sessionHash, info, systemTime, monotonicTime, receiveTime),
+        query);
+  };
+
   auto writeSysProcStat = [&db, &rq, &status, &query](
                               const std::string &sessionHash,
                               const tkm::msg::monitor::SysProcStat &sysProcStat,
@@ -357,6 +379,26 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
                   data.system_time_sec(),
                   data.monotonic_time_sec(),
                   data.receive_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_ProcInfo: {
+    tkm::msg::monitor::ProcInfo procInfo;
+    data.payload().UnpackTo(&procInfo);
+    writeProcInfo(App()->getSessionData().hash(),
+                  procInfo,
+                  data.system_time_sec(),
+                  data.monotonic_time_sec(),
+                  data.receive_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_ContextInfo: {
+    tkm::msg::monitor::ContextInfo ctxInfo;
+    data.payload().UnpackTo(&ctxInfo);
+    writeContextInfo(App()->getSessionData().hash(),
+                     ctxInfo,
+                     data.system_time_sec(),
+                     data.monotonic_time_sec(),
+                     data.receive_time_sec());
     break;
   }
   case tkm::msg::monitor::Data_What_SysProcStat: {

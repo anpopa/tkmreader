@@ -241,6 +241,46 @@ void Connection::initCollectorTimers(void)
     return false;
   });
 
+  // ProcInfo timer
+  m_procInfoTimer = std::make_shared<Timer>("ProcInfoTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      logInfo() << "Request ProcInfo data to " << App()->getDeviceData().name();
+
+      requestMessage.set_id("GetProcInfo");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetProcInfo);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return lock->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // ContextInfo timer
+  m_contextInfoTimer = std::make_shared<Timer>("ContextInfoTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      logInfo() << "Request ContextInfo data to " << App()->getDeviceData().name();
+
+      requestMessage.set_id("GetContextInfo");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetContextInfo);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return lock->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
   // ProcEvent timer
   m_procEventTimer = std::make_shared<Timer>("ProcEventTimer", [weakConnection]() {
     auto lock = weakConnection.lock();
@@ -326,6 +366,10 @@ void Connection::startCollectorTimers(void)
 {
   m_procAcctTimer->start(App()->getSessionInfo().proc_acct_poll_interval(), true);
   App()->addEventSource(m_procAcctTimer);
+  m_procInfoTimer->start(App()->getSessionInfo().proc_info_poll_interval(), true);
+  App()->addEventSource(m_procInfoTimer);
+  m_contextInfoTimer->start(App()->getSessionInfo().context_information_poll_interval(), true);
+  App()->addEventSource(m_contextInfoTimer);
   m_procEventTimer->start(App()->getSessionInfo().proc_event_poll_interval(), true);
   App()->addEventSource(m_procEventTimer);
   m_sysProcStatTimer->start(App()->getSessionInfo().sys_proc_stat_poll_interval(), true);
@@ -340,6 +384,10 @@ void Connection::stopCollectorTimers(void)
 {
   m_procAcctTimer->stop();
   App()->remEventSource(m_procAcctTimer);
+  m_procInfoTimer->stop();
+  App()->remEventSource(m_procInfoTimer);
+  m_contextInfoTimer->stop();
+  App()->remEventSource(m_contextInfoTimer);
   m_procEventTimer->stop();
   App()->remEventSource(m_procEventTimer);
   m_sysProcStatTimer->stop();
