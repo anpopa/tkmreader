@@ -328,10 +328,30 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
-      logInfo() << "Request SysProcMeminfo data to " << App()->getDeviceData().name();
+      logInfo() << "Request SysProcMemInfo data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetSysProcMemInfo");
-      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcMeminfo);
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcMemInfo);
+      requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+      requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+      requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+      return lock->writeEnvelope(requestEnvelope);
+    }
+    return false;
+  });
+
+  // SysProcDiskStats timer
+  m_sysProcDiskStatsTimer = std::make_shared<Timer>("SysProcDiskStatsTimer", [weakConnection]() {
+    auto lock = weakConnection.lock();
+    if (lock) {
+      tkm::msg::Envelope requestEnvelope;
+      tkm::msg::collector::Request requestMessage;
+
+      logInfo() << "Request SysProcDiskStats data to " << App()->getDeviceData().name();
+
+      requestMessage.set_id("GetSysProcDiskStats");
+      requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcDiskStats);
       requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
       requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
       requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
@@ -376,6 +396,8 @@ void Connection::startCollectorTimers(void)
   App()->addEventSource(m_sysProcStatTimer);
   m_sysProcMemInfoTimer->start(App()->getSessionInfo().sys_proc_meminfo_poll_interval(), true);
   App()->addEventSource(m_sysProcMemInfoTimer);
+  m_sysProcDiskStatsTimer->start(App()->getSessionInfo().sys_proc_diskstats_poll_interval(), true);
+  App()->addEventSource(m_sysProcDiskStatsTimer);
   m_sysProcPressureTimer->start(App()->getSessionInfo().sys_proc_pressure_poll_interval(), true);
   App()->addEventSource(m_sysProcPressureTimer);
 }
@@ -394,6 +416,8 @@ void Connection::stopCollectorTimers(void)
   App()->remEventSource(m_sysProcStatTimer);
   m_sysProcMemInfoTimer->stop();
   App()->remEventSource(m_sysProcMemInfoTimer);
+  m_sysProcDiskStatsTimer->stop();
+  App()->remEventSource(m_sysProcDiskStatsTimer);
   m_sysProcPressureTimer->stop();
   App()->remEventSource(m_sysProcPressureTimer);
 }

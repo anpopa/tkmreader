@@ -53,9 +53,12 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
 static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysProcPressure,
                                  uint64_t systemTime,
                                  uint64_t monotonicTime);
-static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProcMeminfo,
+static void printSysProcMemInfo(const tkm::msg::monitor::SysProcMemInfo &sysProcMemInfo,
                                 uint64_t systemTime,
                                 uint64_t monotonicTime);
+static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sysProcDiskStats,
+                                  uint64_t systemTime,
+                                  uint64_t monotonicTime);
 
 static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -228,6 +231,8 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
       sessionInfo.sys_proc_stat_poll_interval());
   App()->getSessionData().set_sys_proc_meminfo_poll_interval(
       sessionInfo.sys_proc_meminfo_poll_interval());
+  App()->getSessionData().set_sys_proc_diskstats_poll_interval(
+      sessionInfo.sys_proc_diskstats_poll_interval());
   App()->getSessionData().set_sys_proc_pressure_poll_interval(
       sessionInfo.sys_proc_pressure_poll_interval());
 
@@ -239,6 +244,8 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   logDebug() << "            sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval();
   logDebug() << "            sysProcMemInfoPollInterval="
              << sessionInfo.sys_proc_meminfo_poll_interval();
+  logDebug() << "            sysProcDiskStatsPollInterval="
+             << sessionInfo.sys_proc_diskstats_poll_interval();
   logDebug() << "            sysProcPressurePollInterval="
              << sessionInfo.sys_proc_pressure_poll_interval();
 
@@ -256,6 +263,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   intervals["sys_proc_stat_poll"] = sessionInfo.sys_proc_stat_poll_interval();
   intervals["sys_proc_meminfo_poll"] = sessionInfo.sys_proc_meminfo_poll_interval();
   intervals["sys_proc_pressure_poll"] = sessionInfo.sys_proc_pressure_poll_interval();
+  intervals["sys_proc_diskstats_poll"] = sessionInfo.sys_proc_diskstats_poll_interval();
   head["intervals"] = intervals;
 
   writeJsonStream() << head;
@@ -315,10 +323,16 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
     printSysProcStat(sysProcStat, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
-  case tkm::msg::monitor::Data_What_SysProcMeminfo: {
-    tkm::msg::monitor::SysProcMeminfo sysProcMeminfo;
-    data.payload().UnpackTo(&sysProcMeminfo);
-    printSysProcMeminfo(sysProcMeminfo, data.system_time_sec(), data.monotonic_time_sec());
+  case tkm::msg::monitor::Data_What_SysProcMemInfo: {
+    tkm::msg::monitor::SysProcMemInfo sysProcMemInfo;
+    data.payload().UnpackTo(&sysProcMemInfo);
+    printSysProcMemInfo(sysProcMemInfo, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_SysProcDiskStats: {
+    tkm::msg::monitor::SysProcDiskStats sysProcDiskStats;
+    data.payload().UnpackTo(&sysProcDiskStats);
+    printSysProcDiskStats(sysProcDiskStats, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
   case tkm::msg::monitor::Data_What_SysProcPressure: {
@@ -545,7 +559,7 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   writeJsonStream() << head;
 }
 
-static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProcMeminfo,
+static void printSysProcMemInfo(const tkm::msg::monitor::SysProcMemInfo &sysProcMemInfo,
                                 uint64_t systemTime,
                                 uint64_t monotonicTime)
 {
@@ -558,16 +572,46 @@ static void printSysProcMeminfo(const tkm::msg::monitor::SysProcMeminfo &sysProc
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value meminfo;
-  meminfo["mem_total"] = sysProcMeminfo.mem_total();
-  meminfo["mem_free"] = sysProcMeminfo.mem_free();
-  meminfo["mem_available"] = sysProcMeminfo.mem_available();
-  meminfo["mem_cached"] = sysProcMeminfo.mem_cached();
-  meminfo["mem_available_percent"] = sysProcMeminfo.mem_percent();
-  meminfo["swap_total"] = sysProcMeminfo.swap_total();
-  meminfo["swap_free"] = sysProcMeminfo.swap_free();
-  meminfo["swap_cached"] = sysProcMeminfo.swap_cached();
-  meminfo["swap_free_percent"] = sysProcMeminfo.swap_percent();
+  meminfo["mem_total"] = sysProcMemInfo.mem_total();
+  meminfo["mem_free"] = sysProcMemInfo.mem_free();
+  meminfo["mem_available"] = sysProcMemInfo.mem_available();
+  meminfo["mem_cached"] = sysProcMemInfo.mem_cached();
+  meminfo["mem_available_percent"] = sysProcMemInfo.mem_percent();
+  meminfo["swap_total"] = sysProcMemInfo.swap_total();
+  meminfo["swap_free"] = sysProcMemInfo.swap_free();
+  meminfo["swap_cached"] = sysProcMemInfo.swap_cached();
+  meminfo["swap_free_percent"] = sysProcMemInfo.swap_percent();
   head["meminfo"] = meminfo;
+
+  writeJsonStream() << head;
+}
+
+static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sysProcDiskStats,
+                                  uint64_t systemTime,
+                                  uint64_t monotonicTime)
+{
+  Json::Value head;
+
+  head["type"] = "diskstats";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  Json::Value diskstats;
+  diskstats["major"] = sysProcDiskStats.major();
+  diskstats["minor"] = sysProcDiskStats.minor();
+  diskstats["name"] = sysProcDiskStats.name();
+  diskstats["reads_completed"] = sysProcDiskStats.reads_completed();
+  diskstats["reads_merged"] = sysProcDiskStats.reads_merged();
+  diskstats["reads_spent_ms"] = sysProcDiskStats.reads_spent_ms();
+  diskstats["writes_completed"] = sysProcDiskStats.writes_completed();
+  diskstats["writes_merged"] = sysProcDiskStats.writes_merged();
+  diskstats["writes_spent_ms"] = sysProcDiskStats.writes_spent_ms();
+  diskstats["io_in_progress"] = sysProcDiskStats.io_in_progress();
+  diskstats["io_spent_ms"] = sysProcDiskStats.io_spent_ms();
+  diskstats["io_weighted_ms"] = sysProcDiskStats.io_weighted_ms();
+  head["diskstats"] = diskstats;
 
   writeJsonStream() << head;
 }

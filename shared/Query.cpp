@@ -121,8 +121,8 @@ auto Query::createTables(Query::Type type) -> std::string
         << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
         << ") ON DELETE CASCADE);";
 
-    // SysProcMeminfo table
-    out << "CREATE TABLE IF NOT EXISTS " << m_sysProcMeminfoTableName << " (";
+    // SysProcMemInfo table
+    out << "CREATE TABLE IF NOT EXISTS " << m_sysProcMemInfoTableName << " (";
     if (type == Query::Type::SQLite3) {
       out << m_sysProcMemColumn.at(SysProcMemColumn::Id) << " INTEGER PRIMARY KEY, "
           << m_sysProcMemColumn.at(SysProcMemColumn::SystemTime) << " INTEGER NOT NULL, "
@@ -156,6 +156,50 @@ auto Query::createTables(Query::Type type) -> std::string
     }
     out << "CONSTRAINT KFSession FOREIGN KEY(" << m_sysProcMemColumn.at(SysProcMemColumn::SessionId)
         << ") REFERENCES " << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
+        << ") ON DELETE CASCADE);";
+
+    // SysProcDiskStats table
+    out << "CREATE TABLE IF NOT EXISTS " << m_sysProcDiskStatsTableName << " (";
+    if (type == Query::Type::SQLite3) {
+      out << m_sysProcDiskColumn.at(SysProcDiskColumn::Id) << " INTEGER PRIMARY KEY, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::SystemTime) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::MonotonicTime) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReceiveTime) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Major) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Minor) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Name) << " TEXT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsCompleted) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsMerged) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsSpentMs) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesCompleted) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesMerged) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesSpentMs) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOInProgress) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOSpentMs) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOWeightedMs) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::SessionId) << " INTEGER NOT NULL, ";
+    } else {
+      out << m_sysProcDiskColumn.at(SysProcDiskColumn::Id) << " SERIAL PRIMARY KEY, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::SystemTime) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::MonotonicTime) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReceiveTime) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Major) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Minor) << " INTEGER NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::Name) << " TEXT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsCompleted) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsMerged) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsSpentMs) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesCompleted) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesMerged) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesSpentMs) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOInProgress) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOSpentMs) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::IOWeightedMs) << " BIGINT NOT NULL, "
+          << m_sysProcDiskColumn.at(SysProcDiskColumn::SessionId) << " INTEGER NOT NULL, ";
+    }
+    out << "CONSTRAINT KFSession FOREIGN KEY("
+        << m_sysProcStatColumn.at(SysProcStatColumn::SessionId) << ") REFERENCES "
+        << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
         << ") ON DELETE CASCADE);";
 
     // SysProcPressure table
@@ -333,7 +377,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_procInfoColumn.at(ProcInfoColumn::Comm) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::Pid) << " INTEGER NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::PPid) << " INTEGER NOT NULL, "
-          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CtxName) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CpuTime) << " INTEGER NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " INTEGER NOT NULL, "
@@ -347,7 +391,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_procInfoColumn.at(ProcInfoColumn::Comm) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::Pid) << " BIGINT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::PPid) << " BIGINT NOT NULL, "
-          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::CtxId) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CtxName) << " TEXT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CpuTime) << " BIGINT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " BIGINT NOT NULL, "
@@ -365,7 +409,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_contextInfoColumn.at(ContextInfoColumn::SystemTime) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::MonotonicTime) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::ReceiveTime) << " INTEGER NOT NULL, "
-          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " TEXT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::CtxName) << " TEXT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuTime) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " INTEGER NOT NULL, "
@@ -376,7 +420,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_contextInfoColumn.at(ContextInfoColumn::SystemTime) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::MonotonicTime) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::ReceiveTime) << " BIGINT NOT NULL, "
-          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::CtxId) << " TEXT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::CtxName) << " TEXT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuTime) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " BIGINT NOT NULL, "
@@ -400,7 +444,8 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_devicesTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sessionsTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sysProcStatTableName << ";";
-    out << "DROP TABLE IF EXISTS " << m_sysProcMeminfoTableName << ";";
+    out << "DROP TABLE IF EXISTS " << m_sysProcMemInfoTableName << ";";
+    out << "DROP TABLE IF EXISTS " << m_sysProcDiskStatsTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procInfoTableName << ";";
@@ -410,7 +455,8 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_devicesTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sessionsTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sysProcStatTableName << " CASCADE;";
-    out << "DROP TABLE IF EXISTS " << m_sysProcMeminfoTableName << " CASCADE;";
+    out << "DROP TABLE IF EXISTS " << m_sysProcMemInfoTableName << " CASCADE;";
+    out << "DROP TABLE IF EXISTS " << m_sysProcDiskStatsTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procInfoTableName << " CASCADE;";
@@ -725,7 +771,7 @@ auto Query::addData(Query::Type type,
 
 auto Query::addData(Query::Type type,
                     const std::string &sessionHash,
-                    const tkm::msg::monitor::SysProcMeminfo &sysProcMem,
+                    const tkm::msg::monitor::SysProcMemInfo &sysProcMem,
                     uint64_t systemTime,
                     uint64_t monotonicTime,
                     uint64_t receiveTime) -> std::string
@@ -733,7 +779,7 @@ auto Query::addData(Query::Type type,
   std::stringstream out;
 
   if ((type == Query::Type::SQLite3) || (type == Query::Type::PostgreSQL)) {
-    out << "INSERT INTO " << m_sysProcMeminfoTableName << " ("
+    out << "INSERT INTO " << m_sysProcMemInfoTableName << " ("
         << m_sysProcMemColumn.at(SysProcMemColumn::SystemTime) << ","
         << m_sysProcMemColumn.at(SysProcMemColumn::MonotonicTime) << ","
         << m_sysProcMemColumn.at(SysProcMemColumn::ReceiveTime) << ","
@@ -752,6 +798,55 @@ auto Query::addData(Query::Type type,
         << sysProcMem.mem_cached() << "', '" << sysProcMem.mem_percent() << "', '"
         << sysProcMem.swap_total() << "', '" << sysProcMem.swap_free() << "', '"
         << sysProcMem.swap_cached() << "', '" << sysProcMem.swap_percent() << "', ";
+
+    if (type == Query::Type::SQLite3) {
+      out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+          << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " IS "
+          << "'" << sessionHash << "' AND EndTimestamp = 0));";
+    } else {
+      out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+          << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " LIKE "
+          << "'" << sessionHash << "' AND EndTimestamp = 0));";
+    }
+  }
+
+  return out.str();
+}
+
+auto Query::addData(Query::Type type,
+                    const std::string &sessionHash,
+                    const tkm::msg::monitor::SysProcDiskStats &sysDiskStats,
+                    uint64_t systemTime,
+                    uint64_t monotonicTime,
+                    uint64_t receiveTime) -> std::string
+{
+  std::stringstream out;
+
+  if ((type == Query::Type::SQLite3) || (type == Query::Type::PostgreSQL)) {
+    out << "INSERT INTO " << m_sysProcDiskStatsTableName << " ("
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::SystemTime) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::MonotonicTime) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::ReceiveTime) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::Major) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::Minor) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::Name) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsCompleted) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsMerged) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::ReadsSpentMs) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesCompleted) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesMerged) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::WritesSpentMs) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::IOInProgress) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::IOSpentMs) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::IOWeightedMs) << ","
+        << m_sysProcDiskColumn.at(SysProcDiskColumn::SessionId) << ") VALUES ('" << systemTime
+        << "', '" << monotonicTime << "', '" << receiveTime << "', '" << sysDiskStats.major()
+        << "', '" << sysDiskStats.minor() << "', '" << sysDiskStats.name() << "', '"
+        << sysDiskStats.reads_completed() << "', '" << sysDiskStats.reads_merged() << "', '"
+        << sysDiskStats.reads_spent_ms() << "', '" << sysDiskStats.writes_completed() << "', '"
+        << sysDiskStats.writes_merged() << "', '" << sysDiskStats.writes_spent_ms() << "', '"
+        << sysDiskStats.io_in_progress() << "', '" << sysDiskStats.io_spent_ms() << "', '"
+        << sysDiskStats.io_weighted_ms() << "', ";
 
     if (type == Query::Type::SQLite3) {
       out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
@@ -950,7 +1045,7 @@ auto Query::addData(Query::Type type,
         << m_procInfoColumn.at(ProcInfoColumn::SessionId) << ") VALUES ('" << systemTime << "', '"
         << monotonicTime << "', '" << receiveTime << "', '" << procInfo.comm() << "', '"
         << procInfo.pid() << "', '" << procInfo.ppid() << "', '"
-        << static_cast<uint32_t>(procInfo.ctx_id()) << "', '" << procInfo.ctx_name() << "', '"
+        << std::to_string(procInfo.ctx_id()) << "', '" << procInfo.ctx_name() << "', '"
         << procInfo.cpu_time() << "', '" << procInfo.cpu_percent() << "', '" << procInfo.mem_vmrss()
         << "', ";
   }
@@ -989,7 +1084,7 @@ auto Query::addData(Query::Type type,
         << m_contextInfoColumn.at(ContextInfoColumn::TotalMemVmRSS) << ","
         << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << ") VALUES ('" << systemTime
         << "', '" << monotonicTime << "', '" << receiveTime << "', '"
-        << static_cast<uint32_t>(ctxInfo.ctx_id()) << "', '" << ctxInfo.ctx_name() << "', '"
+        << std::to_string(ctxInfo.ctx_id()) << "', '" << ctxInfo.ctx_name() << "', '"
         << ctxInfo.total_cpu_time() << "', '" << ctxInfo.total_cpu_percent() << "', '"
         << ctxInfo.total_mem_vmrss() << "', ";
   }

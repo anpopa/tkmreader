@@ -69,6 +69,7 @@ private:
   std::shared_ptr<Timer> m_procEventTimer = nullptr;
   std::shared_ptr<Timer> m_sysProcStatTimer = nullptr;
   std::shared_ptr<Timer> m_sysProcMemInfoTimer = nullptr;
+  std::shared_ptr<Timer> m_sysProcDiskStatsTimer = nullptr;
   std::shared_ptr<Timer> m_sysProcPressureTimer = nullptr;
   std::shared_ptr<Timer> m_contextInfoTimer = nullptr;
 

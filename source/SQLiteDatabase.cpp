@@ -322,9 +322,9 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
         query);
   };
 
-  auto writeSysProcMeminfo = [&db, &rq, &status, &query](
+  auto writeSysProcMemInfo = [&db, &rq, &status, &query](
                                  const std::string &sessionHash,
-                                 const tkm::msg::monitor::SysProcMeminfo &sysProcMem,
+                                 const tkm::msg::monitor::SysProcMemInfo &sysProcMem,
                                  uint64_t systemTime,
                                  uint64_t monotonicTime,
                                  uint64_t receiveTime) {
@@ -333,6 +333,21 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
             Query::Type::SQLite3, sessionHash, sysProcMem, systemTime, monotonicTime, receiveTime),
         query);
   };
+
+  auto writeSysProcDiskStats =
+      [&db, &rq, &status, &query](const std::string &sessionHash,
+                                  const tkm::msg::monitor::SysProcDiskStats &sysDiskStats,
+                                  uint64_t systemTime,
+                                  uint64_t monotonicTime,
+                                  uint64_t receiveTime) {
+        status = db->runQuery(tkmQuery.addData(Query::Type::SQLite3,
+                                               sessionHash,
+                                               sysDiskStats,
+                                               systemTime,
+                                               monotonicTime,
+                                               receiveTime),
+                              query);
+      };
 
   auto writeSysProcPressure =
       [&db, &rq, &status, &query](const std::string &sessionHash,
@@ -411,14 +426,24 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
                      data.receive_time_sec());
     break;
   }
-  case tkm::msg::monitor::Data_What_SysProcMeminfo: {
-    tkm::msg::monitor::SysProcMeminfo sysProcMem;
+  case tkm::msg::monitor::Data_What_SysProcMemInfo: {
+    tkm::msg::monitor::SysProcMemInfo sysProcMem;
     data.payload().UnpackTo(&sysProcMem);
-    writeSysProcMeminfo(App()->getSessionData().hash(),
+    writeSysProcMemInfo(App()->getSessionData().hash(),
                         sysProcMem,
                         data.system_time_sec(),
                         data.monotonic_time_sec(),
                         data.receive_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_SysProcDiskStats: {
+    tkm::msg::monitor::SysProcDiskStats sysProcDisks;
+    data.payload().UnpackTo(&sysProcDisks);
+    writeSysProcDiskStats(App()->getSessionData().hash(),
+                          sysProcDisks,
+                          data.system_time_sec(),
+                          data.monotonic_time_sec(),
+                          data.receive_time_sec());
     break;
   }
   case tkm::msg::monitor::Data_What_SysProcPressure: {

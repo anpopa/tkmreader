@@ -60,7 +60,13 @@ public:
                uint64_t receiveTime) -> std::string;
   auto addData(Query::Type type,
                const std::string &sessionHash,
-               const tkm::msg::monitor::SysProcMeminfo &sysProcMem,
+               const tkm::msg::monitor::SysProcMemInfo &sysProcMem,
+               uint64_t systemTime,
+               uint64_t monotonicTime,
+               uint64_t receiveTime) -> std::string;
+  auto addData(Query::Type type,
+               const std::string &sessionHash,
+               const tkm::msg::monitor::SysProcDiskStats &sysDiskStats,
                uint64_t systemTime,
                uint64_t monotonicTime,
                uint64_t receiveTime) -> std::string;
@@ -217,6 +223,45 @@ public:
       std::make_pair(SysProcMemColumn::SwapCached, "SwapCached"),
       std::make_pair(SysProcMemColumn::SwapFreePercent, "SwapFreePercent"),
       std::make_pair(SysProcMemColumn::SessionId, "SessionId"),
+  };
+
+  enum class SysProcDiskColumn {
+    Id,              // int: Primary key
+    SystemTime,      // int: SystemTime
+    MonotonicTime,   // int: MonotonicTime
+    ReceiveTime,     // int: Receive timestamp
+    Major,           // int: Device major number
+    Minor,           // int: Device minor number
+    Name,            // str: Device name
+    ReadsCompleted,  // int: reads completed
+    ReadsMerged,     // int: reads merged
+    ReadsSpentMs,    // int: reads spent ms
+    WritesCompleted, // int: writes completed
+    WritesMerged,    // int: writes merged
+    WritesSpentMs,   // int: writes spent ms
+    IOInProgress,    // int: io in progress
+    IOSpentMs,       // int: io spent ms
+    IOWeightedMs,    // int: io weighted ms
+    SessionId,       // int: Session id key
+  };
+  const std::map<SysProcDiskColumn, std::string> m_sysProcDiskColumn{
+      std::make_pair(SysProcDiskColumn::Id, "Id"),
+      std::make_pair(SysProcDiskColumn::SystemTime, "SystemTime"),
+      std::make_pair(SysProcDiskColumn::MonotonicTime, "MonotonicTime"),
+      std::make_pair(SysProcDiskColumn::ReceiveTime, "ReceiveTime"),
+      std::make_pair(SysProcDiskColumn::Major, "Major"),
+      std::make_pair(SysProcDiskColumn::Minor, "Minor"),
+      std::make_pair(SysProcDiskColumn::Name, "Name"),
+      std::make_pair(SysProcDiskColumn::ReadsCompleted, "ReadsCompleted"),
+      std::make_pair(SysProcDiskColumn::ReadsMerged, "ReadsMerged"),
+      std::make_pair(SysProcDiskColumn::ReadsSpentMs, "ReadsSpent"),
+      std::make_pair(SysProcDiskColumn::WritesCompleted, "WritesCompleted"),
+      std::make_pair(SysProcDiskColumn::WritesMerged, "WritesMerged"),
+      std::make_pair(SysProcDiskColumn::WritesSpentMs, "WritesSpent"),
+      std::make_pair(SysProcDiskColumn::IOInProgress, "IOInProgress"),
+      std::make_pair(SysProcDiskColumn::IOSpentMs, "IOSpent"),
+      std::make_pair(SysProcDiskColumn::IOWeightedMs, "IOWeightedMs"),
+      std::make_pair(SysProcDiskColumn::SessionId, "SessionId"),
   };
 
   enum class SysProcPressureColumn {
@@ -428,7 +473,8 @@ public:
   const std::string m_devicesTableName = "tkmDevices";
   const std::string m_sessionsTableName = "tkmSessions";
   const std::string m_sysProcStatTableName = "tkmSysProcStat";
-  const std::string m_sysProcMeminfoTableName = "tkmSysProcMeminfo";
+  const std::string m_sysProcMemInfoTableName = "tkmSysProcMemInfo";
+  const std::string m_sysProcDiskStatsTableName = "tkmSysProcDiskStats";
   const std::string m_sysProcPressureTableName = "tkmSysProcPressure";
   const std::string m_procAcctTableName = "tkmProcAcct";
   const std::string m_procInfoTableName = "tkmProcInfo";
