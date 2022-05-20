@@ -13,6 +13,7 @@
 
 #include "Application.h"
 #include "Arguments.h"
+#include "Defaults.h"
 #include "Logger.h"
 #include "SQLiteDatabase.h"
 
@@ -22,6 +23,7 @@ namespace tkm::reader
 {
 
 Application *Application::appInstance = nullptr;
+static bool verboseEnabled = false;
 
 Application::Application(const string &name,
                          const string &description,
@@ -56,6 +58,11 @@ Application::Application(const string &name,
     m_database = std::make_shared<SQLiteDatabase>();
     m_database->enableEvents();
   }
+  if (m_arguments->hasFor(Arguments::Key::Verbose)) {
+    if (m_arguments->getFor(Arguments::Key::Verbose) == tkmDefaults.valFor(Defaults::Val::True)) {
+      verboseEnabled = true;
+    }
+  }
 
   m_connection = std::make_shared<Connection>();
 
@@ -67,6 +74,16 @@ void Application::resetConnection()
 {
   m_connection.reset();
   m_connection = std::make_shared<Connection>();
+}
+
+void Application::printVerbose(const std::string &msg)
+{
+  std::time_t t = std::time(nullptr);
+  std::tm tm = *std::localtime(&t);
+
+  if (verboseEnabled) {
+    std::cout << std::put_time(&tm, "%H:%M:%S") << " " << msg << std::endl;
+  }
 }
 
 } // namespace tkm::reader

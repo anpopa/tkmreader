@@ -42,10 +42,11 @@ auto main(int argc, char **argv) -> int
                               {"port", required_argument, nullptr, 'p'},
                               {"database", required_argument, nullptr, 'd'},
                               {"json", required_argument, nullptr, 'j'},
+                              {"verbose", no_argument, nullptr, 'v'},
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
-  while ((c = getopt_long(argc, argv, "n:a:p:d:j:ih", longopts, &longIndex)) != -1) {
+  while ((c = getopt_long(argc, argv, "n:a:p:d:j:ihv", longopts, &longIndex)) != -1) {
     switch (c) {
     case 'n':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
@@ -66,6 +67,10 @@ auto main(int argc, char **argv) -> int
     case 'j':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::JsonPath, optarg));
       break;
+    case 'v':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Verbose,
+                                                         tkmDefaults.valFor(Defaults::Val::True)));
+      break;
     case 'h':
       help = true;
       break;
@@ -82,6 +87,7 @@ auto main(int argc, char **argv) -> int
     cout << "     --name, -n      <string>  Device name (default unknown)\n";
     cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
     cout << "     --port, -p      <int>     Device port number (default 3357)\n";
+    cout << "     --verbose, -v             Print info messages on STDOUT\n";
     cout << "  Output:\n";
     cout << "     --init, -i                Force output initialization if files exist\n";
     cout << "     --database, -d  <string>  Path to output database file. If not set DB output is "

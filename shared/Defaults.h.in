@@ -20,7 +20,7 @@ namespace tkm::reader
 class Defaults
 {
 public:
-  enum class Default { Version, Name, Address, Port, DatabasePath, JsonPath };
+  enum class Default { Version, Name, Address, Port, DatabasePath, JsonPath, Verbose };
 
   enum class Arg { Id, Status, Reason, Name, RequestId, What };
 
@@ -34,6 +34,7 @@ public:
     m_table.insert(std::pair<Default, std::string>(Default::Name, "unknown"));
     m_table.insert(std::pair<Default, std::string>(Default::DatabasePath, "none"));
     m_table.insert(std::pair<Default, std::string>(Default::JsonPath, "none"));
+    m_table.insert(std::pair<Default, std::string>(Default::Verbose, "false"));
 
     m_args.insert(std::pair<Arg, std::string>(Arg::Id, "Id"));
     m_args.insert(std::pair<Arg, std::string>(Arg::What, "What"));

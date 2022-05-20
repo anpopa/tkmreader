@@ -76,6 +76,7 @@ public:
   auto getDeviceData() -> tkm::msg::control::DeviceData & { return m_deviceData; }
   auto getSessionData() -> tkm::msg::control::SessionData & { return m_sessionData; }
 
+  void printVerbose(const std::string &msg);
   void resetConnection(void);
 
 public:

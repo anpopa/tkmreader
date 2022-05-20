@@ -174,10 +174,12 @@ auto Connection::connect() -> int
       auto ret = select(m_sockFd + 1, NULL, &wfds, &efds, &tv);
       if (ret == -1) {
         logError() << "Error Connecting";
+        App()->printVerbose("Error Connecting");
         return -1;
       }
       if (ret == 0) {
         logError() << "Connection timeout";
+        App()->printVerbose("Connection timeout");
         return -1;
       }
       if (!FD_ISSET(m_sockFd, &efds)) {
@@ -186,15 +188,18 @@ auto Connection::connect() -> int
 
         if (getsockopt(m_sockFd, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
           logError() << "Connection failed";
+          App()->printVerbose("Connection failed");
           return -1;
         }
 
         if (error != 0) {
           logError() << "Connection failed. Reason: " << strerror(error);
+          App()->printVerbose("Connection failed");
           return -1;
         }
       }
     } else {
+      App()->printVerbose("Connection failed");
       logError() << "Failed to connect to monitor: " << strerror(errno);
       return -1;
     }
@@ -231,6 +236,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request ProcAcct");
       logInfo() << "Request ProcAcct data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetProcAcct");
@@ -251,6 +257,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request ProcInfo");
       logInfo() << "Request ProcInfo data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetProcInfo");
@@ -271,6 +278,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request ContextInfo");
       logInfo() << "Request ContextInfo data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetContextInfo");
@@ -291,6 +299,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request ProcEvent");
       logInfo() << "Request ProcEvent data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetProcEvent");
@@ -311,6 +320,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request SysProcStat");
       logInfo() << "Request SysProcStat data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetSysProcStat");
@@ -331,6 +341,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request SysProcMemInfo");
       logInfo() << "Request SysProcMemInfo data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetSysProcMemInfo");
@@ -351,6 +362,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request SysProcDiskStats");
       logInfo() << "Request SysProcDiskStats data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetSysProcDiskStats");
@@ -371,6 +383,7 @@ void Connection::initCollectorTimers(void)
       tkm::msg::Envelope requestEnvelope;
       tkm::msg::collector::Request requestMessage;
 
+      App()->printVerbose("Request SysProcPressure");
       logInfo() << "Request SysProcPressure data to " << App()->getDeviceData().name();
 
       requestMessage.set_id("GetSysProcPressure");

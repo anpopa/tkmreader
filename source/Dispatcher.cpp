@@ -166,6 +166,7 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
   // Sleep before retrying
   ::sleep(1);
 
+  App()->printVerbose("Reconnecting...");
   logInfo() << "Reconnecting to " << App()->getDeviceData().name() << " ...";
 
   // Reset connection object
@@ -209,6 +210,7 @@ static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher:
   envelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
   envelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
 
+  App()->printVerbose("Request session");
   logDebug() << "Request session to monitor";
   return App()->getConnection()->writeEnvelope(envelope);
 }
@@ -218,6 +220,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
 
+  App()->printVerbose("Monitor accepted session with id: " + sessionInfo.hash());
   logInfo() << "Monitor accepted session with id: " << sessionInfo.hash();
   App()->getSessionInfo() = sessionInfo;
 
@@ -284,6 +287,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   App()->getConnection()->startCollectorTimers();
+  App()->printVerbose("Reading data started for session: " + App()->getSessionInfo().hash());
   logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
   return true;
 }
