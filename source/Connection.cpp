@@ -143,6 +143,9 @@ auto Connection::connect() -> int
   std::string monitorAddress = App()->getArguments()->getFor(Arguments::Key::Address);
   struct hostent *monitor = gethostbyname(monitorAddress.c_str());
 
+  if (monitor == nullptr) {
+    throw std::runtime_error("Invalid device address");
+  }
   m_addr.sin_family = AF_INET;
   memcpy(&m_addr.sin_addr.s_addr, monitor->h_addr, (size_t) monitor->h_length);
   try {
