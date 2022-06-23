@@ -92,10 +92,10 @@ Connection::Connection()
           }
           case tkm::msg::monitor::Message_Type_Status: {
             Dispatcher::Request rq{.action = Dispatcher::Action::Status};
-            tkm::msg::monitor::Status status;
+            tkm::msg::monitor::Status s;
 
-            msg.payload().UnpackTo(&status);
-            rq.bulkData = std::make_any<tkm::msg::monitor::Status>(status);
+            msg.payload().UnpackTo(&s);
+            rq.bulkData = std::make_any<tkm::msg::monitor::Status>(s);
 
             App()->getDispatcher()->pushRequest(rq);
             break;
