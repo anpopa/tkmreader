@@ -125,6 +125,15 @@ static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
     IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
+
+    if (App()->getArguments()->hasFor(Arguments::Key::Init)) {
+      const std::map<Defaults::Arg, std::string> forcedArgument{
+          std::make_pair<Defaults::Arg, std::string>(
+              Defaults::Arg::Forced, std::string(tkmDefaults.valFor(Defaults::Val::True)))};
+
+      dbInit.args = forcedArgument;
+    }
+
     status = App()->getDatabase()->pushRequest(dbInit);
   }
 

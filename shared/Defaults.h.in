@@ -22,7 +22,7 @@ class Defaults
 public:
   enum class Default { Version, Name, Address, Port, DatabasePath, JsonPath, Verbose };
 
-  enum class Arg { Id, Status, Reason, Name, RequestId, What };
+  enum class Arg { Id, Status, Reason, Name, RequestId, What, Forced };
 
   enum class Val { True, False, StatusOkay, StatusError, StatusBusy };
 
@@ -39,6 +39,7 @@ public:
     m_args.insert(std::pair<Arg, std::string>(Arg::Id, "Id"));
     m_args.insert(std::pair<Arg, std::string>(Arg::What, "What"));
     m_args.insert(std::pair<Arg, std::string>(Arg::Name, "Name"));
+    m_args.insert(std::pair<Arg, std::string>(Arg::Forced, "Forced"));
 
     m_vals.insert(std::pair<Val, std::string>(Val::True, "True"));
     m_vals.insert(std::pair<Val, std::string>(Val::False, "False"));

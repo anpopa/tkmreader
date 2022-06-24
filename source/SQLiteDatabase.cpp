@@ -168,9 +168,12 @@ static bool doCheckDatabase(const shared_ptr<SQLiteDatabase> db, const SQLiteDat
 
 static bool doInitDatabase(const shared_ptr<SQLiteDatabase> db, const SQLiteDatabase::Request &rq)
 {
-
-  SQLiteDatabase::Query cleanQuery{.type = SQLiteDatabase::QueryType::DropTables};
-  db->runQuery(tkmQuery.dropTables(Query::Type::SQLite3), cleanQuery);
+  if (rq.args.count(Defaults::Arg::Forced)) {
+    if (rq.args.at(Defaults::Arg::Forced) == tkmDefaults.valFor(Defaults::Val::True)) {
+      SQLiteDatabase::Query query{.type = SQLiteDatabase::QueryType::DropTables};
+      db->runQuery(tkmQuery.dropTables(Query::Type::SQLite3), query);
+    }
+  }
 
   SQLiteDatabase::Query createQuery{.type = SQLiteDatabase::QueryType::Create};
   auto status = db->runQuery(tkmQuery.createTables(Query::Type::SQLite3), createQuery);

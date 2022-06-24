@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "Defaults.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -44,6 +45,7 @@ public:
 
   typedef struct Request {
     Action action;
+    std::map<Defaults::Arg, std::string> args;
     std::any bulkData;
   } Request;
 
