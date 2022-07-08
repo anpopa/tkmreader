@@ -18,21 +18,13 @@
 
 #include "Arguments.h"
 #include "Connection.h"
+#include "DataSource.h"
 #include "Defaults.h"
 #include "Dispatcher.h"
 #include "SQLiteDatabase.h"
 
 #include "../bswinfra/source/IApplication.h"
-
-#include "../bswinfra/source/AsyncQueue.h"
-#include "../bswinfra/source/EventLoop.h"
-#include "../bswinfra/source/Exceptions.h"
-#include "../bswinfra/source/KeyFile.h"
-#include "../bswinfra/source/Logger.h"
-#include "../bswinfra/source/PathEvent.h"
-#include "../bswinfra/source/Pollable.h"
-#include "../bswinfra/source/Timer.h"
-#include "../bswinfra/source/UserEvent.h"
+#include "../bswinfra/source/SafeList.h"
 
 #include "Collector.pb.h"
 #include "Monitor.pb.h"
@@ -79,9 +71,15 @@ public:
   void printVerbose(const std::string &msg);
   void resetConnection(void);
 
+  void startUpdateLanes(void);
+  void stopUpdateLanes(void);
+
 public:
   Application(Application const &) = delete;
   void operator=(Application const &) = delete;
+
+private:
+  void configUpdateLanes(void);
 
 private:
   std::shared_ptr<Arguments> m_arguments = nullptr;
@@ -94,6 +92,12 @@ private:
   tkm::msg::control::DeviceData m_deviceData{};
   tkm::msg::control::SessionData m_sessionData{};
   static Application *appInstance;
+
+private:
+  bswi::util::SafeList<std::shared_ptr<DataSource>> m_dataSources{"DataSourceList"};
+  std::shared_ptr<Timer> m_fastLaneTimer = nullptr;
+  std::shared_ptr<Timer> m_paceLaneTimer = nullptr;
+  std::shared_ptr<Timer> m_slowLaneTimer = nullptr;
 };
 
 #define App() tkm::reader::Application::getInstance()

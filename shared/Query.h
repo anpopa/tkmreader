@@ -121,11 +121,6 @@ public:
     Id,                          // int: Primary key
     Name,                        // str: Device name
     Hash,                        // str: Unique device hash
-    ProcAcctPollInterval,        // int: ProcAcct Poll Interval
-    ProcEventPollInterval,       // int: ProcEvent Poll Interval
-    SysProcStatPollInterval,     // int: SysProcStat Poll Interval
-    SysProcMemInfoPollInterval,  // int: SysProcMemInfo Poll Interval
-    SysProcPressurePollInterval, // int: SysProcPressure Poll Interval
     StartTimestamp,              // int: Start timestamp
     EndTimestamp,                // int: End timestamp
     Device,                      // int: Device id key
@@ -134,11 +129,6 @@ public:
       std::make_pair(SessionColumn::Id, "Id"),
       std::make_pair(SessionColumn::Hash, "Hash"),
       std::make_pair(SessionColumn::Name, "Name"),
-      std::make_pair(SessionColumn::ProcAcctPollInterval, "ProcAcctPollInt"),
-      std::make_pair(SessionColumn::ProcEventPollInterval, "ProcEventPollInt"),
-      std::make_pair(SessionColumn::SysProcStatPollInterval, "SysProcStatPollInt"),
-      std::make_pair(SessionColumn::SysProcMemInfoPollInterval, "SysProcMemInfoPollInt"),
-      std::make_pair(SessionColumn::SysProcPressurePollInterval, "SysProcPressurePollInt"),
       std::make_pair(SessionColumn::StartTimestamp, "StartTimestamp"),
       std::make_pair(SessionColumn::EndTimestamp, "EndTimestamp"),
       std::make_pair(SessionColumn::Device, "Device"),

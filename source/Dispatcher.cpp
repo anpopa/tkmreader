@@ -165,7 +165,7 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
 {
   Dispatcher::Request rq;
 
-  if ((App()->getSessionData().hash().length() > 0) && (App()->getSessionData().ended() == 0)) {
+  if ((App()->getSessionInfo().hash().length() > 0) && (App()->getSessionData().ended() == 0)) {
     if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
       IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession};
       App()->getDatabase()->pushRequest(dbrq);
@@ -178,6 +178,8 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
   App()->printVerbose("Reconnecting...");
   logInfo() << "Reconnecting to " << App()->getDeviceData().name() << " ...";
 
+  // Stop update lanes
+  App()->stopUpdateLanes();
   // Reset connection object
   App()->resetConnection();
 
@@ -231,53 +233,17 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
   App()->printVerbose("Monitor accepted session with id: " + sessionInfo.hash());
   logInfo() << "Monitor accepted session with id: " << sessionInfo.hash();
-  App()->getSessionInfo() = sessionInfo;
+  App()->getSessionInfo().CopyFrom(sessionInfo);
+  App()->getSessionData().set_hash(App()->getSessionInfo().hash());
 
-  App()->getSessionData().set_hash(sessionInfo.hash());
-  App()->getSessionData().set_proc_acct_poll_interval(sessionInfo.proc_acct_poll_interval());
-  App()->getSessionData().set_proc_info_poll_interval(sessionInfo.proc_info_poll_interval());
-  App()->getSessionData().set_context_information_poll_interval(
-      sessionInfo.context_information_poll_interval());
-  App()->getSessionData().set_proc_event_poll_interval(sessionInfo.proc_event_poll_interval());
-  App()->getSessionData().set_sys_proc_stat_poll_interval(
-      sessionInfo.sys_proc_stat_poll_interval());
-  App()->getSessionData().set_sys_proc_meminfo_poll_interval(
-      sessionInfo.sys_proc_meminfo_poll_interval());
-  App()->getSessionData().set_sys_proc_diskstats_poll_interval(
-      sessionInfo.sys_proc_diskstats_poll_interval());
-  App()->getSessionData().set_sys_proc_pressure_poll_interval(
-      sessionInfo.sys_proc_pressure_poll_interval());
-
-  logDebug() << "SessionInfo procAcctPollInterval=" << sessionInfo.proc_acct_poll_interval();
-  logDebug() << "            procInfoPollInterval=" << sessionInfo.proc_info_poll_interval();
-  logDebug() << "            procEventPollInterval=" << sessionInfo.proc_event_poll_interval();
-  logDebug() << "            contextInfoPollInterval="
-             << sessionInfo.context_information_poll_interval();
-  logDebug() << "            sysProcStatPollInterval=" << sessionInfo.sys_proc_stat_poll_interval();
-  logDebug() << "            sysProcMemInfoPollInterval="
-             << sessionInfo.sys_proc_meminfo_poll_interval();
-  logDebug() << "            sysProcDiskStatsPollInterval="
-             << sessionInfo.sys_proc_diskstats_poll_interval();
-  logDebug() << "            sysProcPressurePollInterval="
-             << sessionInfo.sys_proc_pressure_poll_interval();
+  logDebug() << "SessionInfo FastLaneInterval=" << sessionInfo.fast_lane_interval()
+             << " PaceLaneInterval=" << sessionInfo.pace_lane_interval()
+             << " SlowLaneInterval=" << sessionInfo.slow_lane_interval();
 
   Json::Value head;
   head["type"] = "session";
   head["device"] = App()->getArguments()->getFor(Arguments::Key::Name);
   head["session"] = App()->getSessionInfo().hash();
-  head["lifecycle"] = App()->getSessionInfo().lifecycle_id();
-
-  Json::Value intervals;
-  intervals["proc_acct_poll"] = sessionInfo.proc_acct_poll_interval();
-  intervals["proc_info_poll"] = sessionInfo.proc_info_poll_interval();
-  intervals["proc_event_poll"] = sessionInfo.proc_event_poll_interval();
-  intervals["context_info_poll"] = sessionInfo.context_information_poll_interval();
-  intervals["sys_proc_stat_poll"] = sessionInfo.sys_proc_stat_poll_interval();
-  intervals["sys_proc_meminfo_poll"] = sessionInfo.sys_proc_meminfo_poll_interval();
-  intervals["sys_proc_pressure_poll"] = sessionInfo.sys_proc_pressure_poll_interval();
-  intervals["sys_proc_diskstats_poll"] = sessionInfo.sys_proc_diskstats_poll_interval();
-  head["intervals"] = intervals;
-
   writeJsonStream() << head;
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
@@ -295,9 +261,10 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
 
 static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
-  App()->getConnection()->startCollectorTimers();
   App()->printVerbose("Reading data started for session: " + App()->getSessionInfo().hash());
   logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
+  App()->startUpdateLanes();
+
   return true;
 }
 

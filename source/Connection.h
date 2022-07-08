@@ -58,11 +58,6 @@ public:
     return true;
   }
 
-public:
-  void initCollectorTimers(void);
-  void startCollectorTimers(void);
-  void stopCollectorTimers(void);
-
 private:
   std::shared_ptr<Timer> m_procAcctTimer = nullptr;
   std::shared_ptr<Timer> m_procInfoTimer = nullptr;
