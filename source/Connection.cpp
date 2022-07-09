@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <filesystem>
 #include <netdb.h>
+#include <netinet/tcp.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -209,11 +210,35 @@ auto Connection::connect() -> int
   timeout.tv_usec = 0;
 
   if (setsockopt(m_sockFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-    logError() << "Failed to setsockopt";
+    logError() << "Failed to setsockopt SO_RCVTIMEO. Error: " << strerror(errno);
     return -1;
   }
   if (setsockopt(m_sockFd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
-    logError() << "Failed to setsockopt";
+    logError() << "Failed to setsockopt SO_SNDTIMEO. Error: " << strerror(errno);
+    return -1;
+  }
+
+  int yes = 1;
+  if (setsockopt(m_sockFd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)) < 0) {
+    logError() << "Failed to setsockopt SO_KEEPALIVE. Error: " << strerror(errno);
+    return -1;
+  }
+
+  int idle = 1;
+  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(int)) < 0) {
+    logError() << "Failed to setsockopt TCP_KEEPIDLE. Error: " << strerror(errno);
+    return -1;
+  }
+
+  int interval = 2;
+  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(int)) < 0) {
+    logError() << "Failed to setsockopt TCP_KEEPINTVL. Error: " << strerror(errno);
+    return -1;
+  }
+
+  int maxpkt = 5;
+  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPCNT, &maxpkt, sizeof(int)) < 0) {
+    logError() << "Failed to setsockopt TCP_KEEPCNT. Error: " << strerror(errno);
     return -1;
   }
 
