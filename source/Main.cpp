@@ -93,6 +93,7 @@ auto main(int argc, char **argv) -> int
     cout << "     --database, -d  <string>  Path to output database file. If not set DB output is "
             "disabled\n";
     cout << "     --json, -j      <string>  Path to output json file. Use STDOUT if not set\n";
+    cout << "                               Hint: Can use /dev/null to ignore the output\n";
     cout << "  Help:\n";
     cout << "     --help, -h                Print this help\n\n";
 

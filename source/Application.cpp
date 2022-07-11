@@ -46,7 +46,8 @@ Application::Application(const string &name,
       }
     }
     if (m_arguments->hasFor(Arguments::Key::JsonPath)) {
-      if (std::filesystem::exists(m_arguments->getFor(Arguments::Key::JsonPath))) {
+      if (std::filesystem::exists(m_arguments->getFor(Arguments::Key::JsonPath)) &&
+          (m_arguments->getFor(Arguments::Key::JsonPath) != "/dev/null")) {
         logWarn() << "Removing existing json output file: "
                   << m_arguments->getFor(Arguments::Key::JsonPath);
         std::filesystem::remove(m_arguments->getFor(Arguments::Key::JsonPath));
