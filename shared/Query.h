@@ -54,7 +54,7 @@ public:
   // Add device data
   auto addData(Query::Type type,
                const std::string &sessionHash,
-               const tkm::msg::monitor::SysProcStat &sysProcStat,
+               const tkm::msg::monitor::CPUStat &cpuStat,
                uint64_t systemTime,
                uint64_t monotonicTime,
                uint64_t receiveTime) -> std::string;
@@ -118,12 +118,12 @@ public:
   };
 
   enum class SessionColumn {
-    Id,                          // int: Primary key
-    Name,                        // str: Device name
-    Hash,                        // str: Unique device hash
-    StartTimestamp,              // int: Start timestamp
-    EndTimestamp,                // int: End timestamp
-    Device,                      // int: Device id key
+    Id,             // int: Primary key
+    Name,           // str: Device name
+    Hash,           // str: Unique device hash
+    StartTimestamp, // int: Start timestamp
+    EndTimestamp,   // int: End timestamp
+    Device,         // int: Device id key
   };
   const std::map<SessionColumn, std::string> m_sessionColumn{
       std::make_pair(SessionColumn::Id, "Id"),

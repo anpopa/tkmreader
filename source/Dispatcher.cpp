@@ -530,11 +530,18 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value cpu;
-  cpu["name"] = sysProcStat.cpu().name();
   cpu["all"] = sysProcStat.cpu().all();
   cpu["usr"] = sysProcStat.cpu().usr();
   cpu["sys"] = sysProcStat.cpu().sys();
   head["cpu"] = cpu;
+
+  for (const auto &cpuCore : sysProcStat.core()) {
+    Json::Value core;
+    core["all"] = cpuCore.all();
+    core["usr"] = cpuCore.usr();
+    core["sys"] = cpuCore.sys();
+    head[cpuCore.name()] = core;
+  }
 
   writeJsonStream() << head;
 }
