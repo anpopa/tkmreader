@@ -313,31 +313,31 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
         query);
   };
 
-  auto writeSysProcStat =
+  auto writeSysProcStat = [&db, &rq, &status, &query](
+                              const std::string &sessionHash,
+                              const tkm::msg::monitor::SysProcStat &sysProcStat,
+                              uint64_t systemTime,
+                              uint64_t monotonicTime,
+                              uint64_t receiveTime) {
+    status = db->runQuery(
+        tkmQuery.addData(
+            Query::Type::SQLite3, sessionHash, sysProcStat, systemTime, monotonicTime, receiveTime),
+        query);
+  };
+
+  auto writeSysProcBuddyInfo =
       [&db, &rq, &status, &query](const std::string &sessionHash,
-                                  const tkm::msg::monitor::SysProcStat &sysProcStat,
+                                  const tkm::msg::monitor::SysProcBuddyInfo &SysProcBuddyInfo,
                                   uint64_t systemTime,
                                   uint64_t monotonicTime,
                                   uint64_t receiveTime) {
         status = db->runQuery(tkmQuery.addData(Query::Type::SQLite3,
                                                sessionHash,
-                                               sysProcStat.cpu(),
+                                               SysProcBuddyInfo,
                                                systemTime,
                                                monotonicTime,
                                                receiveTime),
                               query);
-
-        if (status) {
-          for (const auto &coreStat : sysProcStat.core()) {
-            status = db->runQuery(tkmQuery.addData(Query::Type::SQLite3,
-                                                   sessionHash,
-                                                   coreStat,
-                                                   systemTime,
-                                                   monotonicTime,
-                                                   receiveTime),
-                                  query);
-          }
-        }
       };
 
   auto writeSysProcMemInfo = [&db, &rq, &status, &query](
@@ -442,6 +442,16 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
                      data.system_time_sec(),
                      data.monotonic_time_sec(),
                      data.receive_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_SysProcBuddyInfo: {
+    tkm::msg::monitor::SysProcBuddyInfo sysProcBuddyInfo;
+    data.payload().UnpackTo(&sysProcBuddyInfo);
+    writeSysProcBuddyInfo(App()->getSessionData().hash(),
+                          sysProcBuddyInfo,
+                          data.system_time_sec(),
+                          data.monotonic_time_sec(),
+                          data.receive_time_sec());
     break;
   }
   case tkm::msg::monitor::Data_What_SysProcMemInfo: {

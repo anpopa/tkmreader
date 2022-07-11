@@ -229,6 +229,22 @@ void Application::configUpdateLanes(void)
     return getConnection()->writeEnvelope(requestEnvelope);
   };
 
+  const auto sysProcBuddyInfoUpdateCallback = [this]() {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    App()->printVerbose("Request SysProcBuddyInfo");
+    logInfo() << "Request SysProcBuddyInfo data to " << App()->getDeviceData().name();
+
+    requestMessage.set_id("GetSysProcBuddyInfo");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcBuddyInfo);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return getConnection()->writeEnvelope(requestEnvelope);
+  };
+
   const auto sysProcMemInfoUpdateCallback = [this]() {
     tkm::msg::Envelope requestEnvelope;
     tkm::msg::collector::Request requestMessage;
@@ -304,6 +320,10 @@ void Application::configUpdateLanes(void)
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcStat", DataSource::UpdateLane::Fast, sysProcStatUpdateCallback));
       break;
+    case msg::monitor::SessionInfo_DataSource_SysProcBuddyInfo:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcBuddyInfo", DataSource::UpdateLane::Fast, sysProcBuddyInfoUpdateCallback));
+      break;
     case msg::monitor::SessionInfo_DataSource_SysProcMemInfo:
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcMemInfo", DataSource::UpdateLane::Fast, sysProcMemInfoUpdateCallback));
@@ -343,6 +363,10 @@ void Application::configUpdateLanes(void)
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcStat", DataSource::UpdateLane::Pace, sysProcStatUpdateCallback));
       break;
+    case msg::monitor::SessionInfo_DataSource_SysProcBuddyInfo:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcBuddyInfo", DataSource::UpdateLane::Pace, sysProcBuddyInfoUpdateCallback));
+      break;
     case msg::monitor::SessionInfo_DataSource_SysProcMemInfo:
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcMemInfo", DataSource::UpdateLane::Pace, sysProcMemInfoUpdateCallback));
@@ -381,6 +405,10 @@ void Application::configUpdateLanes(void)
     case msg::monitor::SessionInfo_DataSource_SysProcStat:
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcStat", DataSource::UpdateLane::Slow, sysProcStatUpdateCallback));
+      break;
+    case msg::monitor::SessionInfo_DataSource_SysProcBuddyInfo:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcBuddyInfo", DataSource::UpdateLane::Slow, sysProcBuddyInfoUpdateCallback));
       break;
     case msg::monitor::SessionInfo_DataSource_SysProcMemInfo:
       m_dataSources.append(std::make_shared<DataSource>(

@@ -59,6 +59,9 @@ static void printSysProcMemInfo(const tkm::msg::monitor::SysProcMemInfo &sysProc
 static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sysProcDiskStats,
                                   uint64_t systemTime,
                                   uint64_t monotonicTime);
+static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sysProcBuddyInfo,
+                                  uint64_t systemTime,
+                                  uint64_t monotonicTime);
 
 static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -321,6 +324,12 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
     printSysProcPressure(sysProcPressure, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
+  case tkm::msg::monitor::Data_What_SysProcBuddyInfo: {
+    tkm::msg::monitor::SysProcBuddyInfo sysProcBuddyInfo;
+    data.payload().UnpackTo(&sysProcBuddyInfo);
+    printSysProcBuddyInfo(sysProcBuddyInfo, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
   default:
     break;
   }
@@ -541,6 +550,30 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
     core["usr"] = cpuCore.usr();
     core["sys"] = cpuCore.sys();
     head[cpuCore.name()] = core;
+  }
+
+  writeJsonStream() << head;
+}
+
+static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sysProcBuddyInfo,
+                                  uint64_t systemTime,
+                                  uint64_t monotonicTime)
+{
+  Json::Value head;
+
+  head["type"] = "buddyinfo";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  auto index = 0;
+  for (const auto &nodeEntry : sysProcBuddyInfo.node()) {
+    Json::Value node;
+    node["name"] = nodeEntry.name();
+    node["zone"] = nodeEntry.zone();
+    node["data"] = nodeEntry.data();
+    head[std::to_string(index++)] = node;
   }
 
   writeJsonStream() << head;

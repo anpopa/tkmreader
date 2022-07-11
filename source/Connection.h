@@ -59,16 +59,6 @@ public:
   }
 
 private:
-  std::shared_ptr<Timer> m_procAcctTimer = nullptr;
-  std::shared_ptr<Timer> m_procInfoTimer = nullptr;
-  std::shared_ptr<Timer> m_procEventTimer = nullptr;
-  std::shared_ptr<Timer> m_sysProcStatTimer = nullptr;
-  std::shared_ptr<Timer> m_sysProcMemInfoTimer = nullptr;
-  std::shared_ptr<Timer> m_sysProcDiskStatsTimer = nullptr;
-  std::shared_ptr<Timer> m_sysProcPressureTimer = nullptr;
-  std::shared_ptr<Timer> m_contextInfoTimer = nullptr;
-
-private:
   std::unique_ptr<EnvelopeReader> m_reader = nullptr;
   std::unique_ptr<EnvelopeWriter> m_writer = nullptr;
   struct sockaddr_in m_addr = {};
