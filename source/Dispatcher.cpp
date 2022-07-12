@@ -62,6 +62,9 @@ static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sys
 static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sysProcBuddyInfo,
                                   uint64_t systemTime,
                                   uint64_t monotonicTime);
+static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysProcWireless,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime);
 
 static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -330,6 +333,12 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
     printSysProcBuddyInfo(sysProcBuddyInfo, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
+  case tkm::msg::monitor::Data_What_SysProcWireless: {
+    tkm::msg::monitor::SysProcWireless sysProcWireless;
+    data.payload().UnpackTo(&sysProcWireless);
+    printSysProcWireless(sysProcWireless, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
   default:
     break;
   }
@@ -573,6 +582,38 @@ static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sys
     node["name"] = nodeEntry.name();
     node["zone"] = nodeEntry.zone();
     node["data"] = nodeEntry.data();
+    head[std::to_string(index++)] = node;
+  }
+
+  writeJsonStream() << head;
+}
+
+static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysProcWireless,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime)
+{
+  Json::Value head;
+
+  head["type"] = "wireless";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  auto index = 0;
+  for (const auto &ifw : sysProcWireless.ifw()) {
+    Json::Value node;
+    node["name"] = ifw.name();
+    node["status"] = ifw.status();
+    node["quality_link"] = ifw.quality_link();
+    node["quality_level"] = ifw.quality_level();
+    node["quality_noise"] = ifw.quality_noise();
+    node["discarded_nwid"] = ifw.discarded_nwid();
+    node["discarded_crypt"] = ifw.discarded_crypt();
+    node["discarded_frag"] = ifw.discarded_frag();
+    node["discarded_retry"] = ifw.discarded_retry();
+    node["discarded_misc"] = ifw.discarded_misc();
+    node["missed_beacon"] = ifw.missed_beacon();
     head[std::to_string(index++)] = node;
   }
 
