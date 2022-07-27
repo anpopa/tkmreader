@@ -505,12 +505,15 @@ static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
   head["receive_time"] = ::time(NULL);
   head["session"] = App()->getSessionInfo().hash();
 
-  body["ctx_id"] = info.ctx_id();
-  body["ctx_name"] = info.ctx_name();
-  body["total_cpu_time"] = info.total_cpu_time();
-  body["total_cpu_percent"] = info.total_cpu_percent();
-  body["total_mem_vmrss"] = info.total_mem_vmrss();
-  head["ctxinfo"] = body;
+  for (const auto &ctxEntry : info.entry()) {
+    Json::Value entry;
+    entry["ctx_id"] = ctxEntry.ctx_id();
+    entry["ctx_name"] = ctxEntry.ctx_name();
+    entry["total_cpu_time"] = ctxEntry.total_cpu_time();
+    entry["total_cpu_percent"] = ctxEntry.total_cpu_percent();
+    entry["total_mem_vmrss"] = ctxEntry.total_mem_vmrss();
+    head[ctxEntry.ctx_name()] = entry;
+  }
 
   writeJsonStream() << head;
 }
@@ -662,21 +665,22 @@ static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sys
   head["receive_time"] = ::time(NULL);
   head["session"] = App()->getSessionInfo().hash();
 
-  Json::Value diskstats;
-  diskstats["major"] = sysProcDiskStats.major();
-  diskstats["minor"] = sysProcDiskStats.minor();
-  diskstats["name"] = sysProcDiskStats.name();
-  diskstats["reads_completed"] = sysProcDiskStats.reads_completed();
-  diskstats["reads_merged"] = sysProcDiskStats.reads_merged();
-  diskstats["reads_spent_ms"] = sysProcDiskStats.reads_spent_ms();
-  diskstats["writes_completed"] = sysProcDiskStats.writes_completed();
-  diskstats["writes_merged"] = sysProcDiskStats.writes_merged();
-  diskstats["writes_spent_ms"] = sysProcDiskStats.writes_spent_ms();
-  diskstats["io_in_progress"] = sysProcDiskStats.io_in_progress();
-  diskstats["io_spent_ms"] = sysProcDiskStats.io_spent_ms();
-  diskstats["io_weighted_ms"] = sysProcDiskStats.io_weighted_ms();
-  head["diskstats"] = diskstats;
-
+  for (const auto &diskEntry : sysProcDiskStats.disk()) {
+    Json::Value entry;
+    entry["major"] = diskEntry.major();
+    entry["minor"] = diskEntry.minor();
+    entry["name"] = diskEntry.name();
+    entry["reads_completed"] = diskEntry.reads_completed();
+    entry["reads_merged"] = diskEntry.reads_merged();
+    entry["reads_spent_ms"] = diskEntry.reads_spent_ms();
+    entry["writes_completed"] = diskEntry.writes_completed();
+    entry["writes_merged"] = diskEntry.writes_merged();
+    entry["writes_spent_ms"] = diskEntry.writes_spent_ms();
+    entry["io_in_progress"] = diskEntry.io_in_progress();
+    entry["io_spent_ms"] = diskEntry.io_spent_ms();
+    entry["io_weighted_ms"] = diskEntry.io_weighted_ms();
+    head[diskEntry.name()] = entry;
+  }
   writeJsonStream() << head;
 }
 
