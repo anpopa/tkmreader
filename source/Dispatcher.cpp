@@ -476,15 +476,18 @@ printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint
   head["receive_time"] = ::time(NULL);
   head["session"] = App()->getSessionInfo().hash();
 
-  body["comm"] = info.comm();
-  body["pid"] = info.pid();
-  body["ppid"] = info.ppid();
-  body["ctx_id"] = info.ctx_id();
-  body["ctx_name"] = info.ctx_name();
-  body["cpu_time"] = info.cpu_time();
-  body["cpu_percent"] = info.cpu_percent();
-  body["mem_vmrss"] = info.mem_vmrss();
-  head["procinfo"] = body;
+  for (const auto &procEntry : info.entry()) {
+    Json::Value entry;
+    entry["comm"] = procEntry.comm();
+    entry["pid"] = procEntry.pid();
+    entry["ppid"] = procEntry.ppid();
+    entry["ctx_id"] = procEntry.ctx_id();
+    entry["ctx_name"] = procEntry.ctx_name();
+    entry["cpu_time"] = procEntry.cpu_time();
+    entry["cpu_percent"] = procEntry.cpu_percent();
+    entry["mem_vmrss"] = procEntry.mem_vmrss();
+    head[std::to_string(procEntry.pid())] = entry;
+  }
 
   writeJsonStream() << head;
 }
