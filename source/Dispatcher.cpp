@@ -269,6 +269,8 @@ static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
 {
   App()->printVerbose("Reading data started for session: " + App()->getSessionInfo().hash());
   logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
+
+  App()->requestStartupData();
   App()->startUpdateLanes();
 
   return true;

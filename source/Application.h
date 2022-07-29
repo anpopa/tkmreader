@@ -71,6 +71,7 @@ public:
   void printVerbose(const std::string &msg);
   void resetConnection(void);
 
+  void requestStartupData(void);
   void startUpdateLanes(void);
   void stopUpdateLanes(void);
 

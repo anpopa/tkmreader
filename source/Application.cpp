@@ -87,6 +87,23 @@ void Application::printVerbose(const std::string &msg)
   }
 }
 
+void Application::requestStartupData(void)
+{
+  tkm::msg::Envelope requestEnvelope;
+  tkm::msg::collector::Request requestMessage;
+
+  printVerbose("Request Startup Data");
+  logInfo() << "Request StartupData data to " << App()->getDeviceData().name();
+
+  requestMessage.set_id("GetStartupData");
+  requestMessage.set_type(tkm::msg::collector::Request_Type_GetStartupData);
+  requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+  requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+  requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+  getConnection()->writeEnvelope(requestEnvelope);
+}
+
 void Application::startUpdateLanes(void)
 {
   m_fastLaneTimer = std::make_shared<Timer>("FastLaneTimer", [this]() {
