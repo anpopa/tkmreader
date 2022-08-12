@@ -71,6 +71,10 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR}/source)
 include_directories(${CMAKE_BINARY_DIR}/source)
 
+if (${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+    link_directories(/usr/local/lib)
+endif()
+
 # Dependencies
 find_package          (PkgConfig REQUIRED)
 find_package          (Threads REQUIRED)
