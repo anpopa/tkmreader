@@ -20,7 +20,7 @@
 #include <any>
 #include <filesystem>
 #include <string>
-#include <taskmonitor/TaskMonitor.h>
+#include <taskmonitor/taskmonitor.h>
 #include <vector>
 
 using std::shared_ptr;

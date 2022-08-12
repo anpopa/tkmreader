@@ -13,7 +13,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <taskmonitor/TaskMonitor.h>
+#include <taskmonitor/taskmonitor.h>
 
 #include "Arguments.h"
 

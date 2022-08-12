@@ -12,7 +12,7 @@
 #pragma once
 
 #include <string>
-#include <taskmonitor/TaskMonitor.h>
+#include <taskmonitor/taskmonitor.h>
 
 #include "Arguments.h"
 #include "Connection.h"
