@@ -13,11 +13,9 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <taskmonitor/TaskMonitor.h>
 
 #include "Arguments.h"
-#include "EnvelopeReader.h"
-#include "EnvelopeWriter.h"
-#include "Helpers.h"
 
 #include "../bswinfra/source/Exceptions.h"
 #include "../bswinfra/source/IApplication.h"
@@ -45,22 +43,22 @@ public:
   [[nodiscard]] int getFD() const { return m_sockFd; }
   auto getShared() -> std::shared_ptr<Connection> { return shared_from_this(); }
 
-  auto readEnvelope(tkm::msg::Envelope &envelope) -> IAsyncEnvelope::Status
+  auto readEnvelope(tkm::msg::Envelope &envelope) -> tkm::IAsyncEnvelope::Status
   {
     return m_reader->next(envelope);
   }
 
   bool writeEnvelope(const tkm::msg::Envelope &envelope)
   {
-    if (m_writer->send(envelope) == IAsyncEnvelope::Status::Ok) {
+    if (m_writer->send(envelope) == tkm::IAsyncEnvelope::Status::Ok) {
       return m_writer->flush();
     }
     return true;
   }
 
 private:
-  std::unique_ptr<EnvelopeReader> m_reader = nullptr;
-  std::unique_ptr<EnvelopeWriter> m_writer = nullptr;
+  std::unique_ptr<tkm::EnvelopeReader> m_reader = nullptr;
+  std::unique_ptr<tkm::EnvelopeWriter> m_writer = nullptr;
   struct sockaddr_in m_addr = {};
   int m_sockFd = -1;
 };

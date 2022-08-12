@@ -23,15 +23,8 @@
 #include "Arguments.h"
 #include "Defaults.h"
 #include "Dispatcher.h"
-#include "Helpers.h"
 #include "IDatabase.h"
 #include "JsonWriter.h"
-
-#include "Collector.pb.h"
-#include "Monitor.pb.h"
-
-using std::shared_ptr;
-using std::string;
 
 namespace tkm::reader
 {
@@ -66,16 +59,16 @@ static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysPr
                                  uint64_t systemTime,
                                  uint64_t monotonicTime);
 
-static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doQuit(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doConnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doReconnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doSendDescriptor(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doRequestSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doStartStream(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doStatus(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doQuit(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 
 void Dispatcher::enableEvents()
 {
@@ -118,7 +111,14 @@ auto Dispatcher::requestHandler(const Request &request) -> bool
   return false;
 }
 
-static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+auto Dispatcher::hashForDevice(const tkm::msg::control::DeviceData &data) -> std::string
+{
+  std::string tmp = data.address();
+  tmp += std::to_string(data.port());
+  return std::to_string(tkm::jnkHsh(tmp.c_str()));
+}
+
+static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
   bool status = true;
@@ -127,7 +127,7 @@ static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   App()->getDeviceData().set_name(App()->getArguments()->getFor(Arguments::Key::Name));
   App()->getDeviceData().set_address(App()->getArguments()->getFor(Arguments::Key::Address));
   App()->getDeviceData().set_port(std::stoi(App()->getArguments()->getFor(Arguments::Key::Port)));
-  App()->getDeviceData().set_hash(hashForDevice(App()->getDeviceData()));
+  App()->getDeviceData().set_hash(mgr->hashForDevice(App()->getDeviceData()));
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
     IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
@@ -153,7 +153,7 @@ static bool doPrepareData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   return mgr->pushRequest(rq);
 }
 
-static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+static bool doConnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
 
@@ -167,7 +167,7 @@ static bool doConnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Reques
   return mgr->pushRequest(rq);
 }
 
-static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+static bool doReconnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
 
@@ -199,7 +199,7 @@ static bool doReconnect(const shared_ptr<Dispatcher> mgr, const Dispatcher::Requ
   return mgr->pushRequest(rq);
 }
 
-static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+static bool doSendDescriptor(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   tkm::msg::collector::Descriptor descriptor;
 
@@ -215,7 +215,7 @@ static bool doSendDescriptor(const shared_ptr<Dispatcher> mgr, const Dispatcher:
   return mgr->pushRequest(nrq);
 }
 
-static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
+static bool doRequestSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   tkm::msg::Envelope envelope;
   tkm::msg::collector::Request request;
@@ -232,7 +232,7 @@ static bool doRequestSession(const shared_ptr<Dispatcher> mgr, const Dispatcher:
   return App()->getConnection()->writeEnvelope(envelope);
 }
 
-static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
+static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &sessionInfo = std::any_cast<tkm::msg::monitor::SessionInfo>(rq.bulkData);
   bool status = true;
@@ -265,7 +265,7 @@ static bool doSetSession(const shared_ptr<Dispatcher> mgr, const Dispatcher::Req
   return status;
 }
 
-static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+static bool doStartStream(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   App()->printVerbose("Reading data started for session: " + App()->getSessionInfo().hash());
   logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
@@ -276,7 +276,7 @@ static bool doStartStream(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   return true;
 }
 
-static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
+static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &data = std::any_cast<tkm::msg::monitor::Data>(rq.bulkData);
 
@@ -353,7 +353,7 @@ static bool doProcessData(const shared_ptr<Dispatcher> mgr, const Dispatcher::Re
   return true;
 }
 
-static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
+static bool doStatus(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &monitorStatus = std::any_cast<tkm::msg::monitor::Status>(rq.bulkData);
   std::string what;
@@ -386,7 +386,7 @@ static bool doStatus(const shared_ptr<Dispatcher> mgr, const Dispatcher::Request
   return doQuit(mgr, rq);
 }
 
-static bool doQuit(const shared_ptr<Dispatcher>, const Dispatcher::Request &)
+static bool doQuit(const std::shared_ptr<Dispatcher>, const Dispatcher::Request &)
 {
   std::cout << std::flush;
   exit(EXIT_SUCCESS);

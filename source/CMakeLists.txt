@@ -1,9 +1,6 @@
 set(BINARY_NAME tkm-reader)
 set(BINARY_SRC 
-    ${CMAKE_SOURCE_DIR}/shared/Helpers.cpp
-    ${CMAKE_SOURCE_DIR}/shared/EnvelopeReader.cpp
-    ${CMAKE_SOURCE_DIR}/shared/EnvelopeWriter.cpp
-    ${CMAKE_SOURCE_DIR}/shared/Query.cpp
+    Query.cpp
     JsonWriter.cpp
     Dispatcher.cpp
     Connection.cpp
@@ -13,5 +10,5 @@ set(BINARY_SRC
     Main.cpp
     )
 add_executable(${BINARY_NAME} ${BINARY_SRC})
-target_link_libraries(${BINARY_NAME} ${SQLite3_LIBRARIES} ${LIBS} BSWInfra TaskMonitorInterfaces)
+target_link_libraries(${BINARY_NAME} ${LIBS} BSWInfra)
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

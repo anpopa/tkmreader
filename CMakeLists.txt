@@ -10,8 +10,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # BaseSoftwareInfrastructure
 set(BSWINFRA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bswinfra)
-set(INTERFACES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/interfaces)
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake" "${INTERFACES_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake")
 
 message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
 
@@ -39,13 +38,12 @@ endif()
 set(WITH_COLLECTOR_CONTROL ON)
 
 set(PROJECT_VERSION_MAJOR "1")
-set(PROJECT_VERSION_MINOR "4")
+set(PROJECT_VERSION_MINOR "5")
 set(PROJECT_VERSION_PATCH ${GIT_SHA1})
 
 include(GNUInstallDirs)
 include(Packing)
 include(BSWInfra)
-include(TaskMonitorInterfaces)
 
 # Add support for coverage analysis
 if(CMAKE_BUILD_TYPE STREQUAL Coverage)
@@ -63,21 +61,30 @@ if(CMAKE_BUILD_TYPE STREQUAL Coverage)
 endif()
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/shared/Defaults.h.in
-    ${CMAKE_BINARY_DIR}/shared/Defaults.h)
+    ${CMAKE_SOURCE_DIR}/source/Defaults.h.in
+    ${CMAKE_BINARY_DIR}/source/Defaults.h)
     
 if(WITH_TIDY)
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
 endif()
 
-# Header files
-include_directories(${CMAKE_SOURCE_DIR}/shared)
-include_directories(${CMAKE_BINARY_DIR}/shared)
+include_directories(${CMAKE_SOURCE_DIR}/source)
+include_directories(${CMAKE_BINARY_DIR}/source)
 
 # Dependencies
 find_package          (PkgConfig REQUIRED)
 find_package          (Threads REQUIRED)
 set                   (LIBS ${LIBS} pthread)
+
+# Use protobuf library (dependency for libtaskmonitor)
+include               (FindProtobuf)
+find_package          (Protobuf REQUIRED)
+set                   (LIBS ${LIBS} ${PROTOBUF_LIBRARY})
+
+# Use libtaskmonitor
+pkg_check_modules     (LIBTKM libtaskmonitor REQUIRED)
+include_directories   (${LIBTKM_INCLUDE_DIRS})
+set                   (LIBS ${LIBS} ${LIBTKM_LIBRARIES})
 
 # Use jsoncpp
 pkg_check_modules     (JSONCPP jsoncpp>=1.9.4 REQUIRED)
@@ -87,6 +94,7 @@ set                   (LIBS ${LIBS} ${JSONCPP_LIBRARIES})
 # Use sqlite3
 find_package          (SQLite3 REQUIRED)
 include_directories   (${SQLITE3_INCLUDE_DIR})
+set                   (LIBS ${LIBS} ${SQLite3_LIBRARIES})
 
 add_subdirectory(source)
 

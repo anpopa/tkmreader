@@ -11,10 +11,8 @@
 
 #pragma once
 
-#include <atomic>
-#include <cstdlib>
 #include <string>
-#include <utility>
+#include <taskmonitor/TaskMonitor.h>
 
 #include "Arguments.h"
 #include "Connection.h"
@@ -25,9 +23,6 @@
 
 #include "../bswinfra/source/IApplication.h"
 #include "../bswinfra/source/SafeList.h"
-
-#include "Collector.pb.h"
-#include "Monitor.pb.h"
 
 namespace tkm::reader
 {

@@ -13,6 +13,7 @@
 
 #include <map>
 #include <string>
+#include <taskmonitor/TaskMonitor.h>
 
 #include "Arguments.h"
 #include "Connection.h"
@@ -20,7 +21,6 @@
 
 #include "../bswinfra/source/AsyncQueue.h"
 #include "../bswinfra/source/Exceptions.h"
-#include "../bswinfra/source/Logger.h"
 
 using namespace bswi::event;
 
@@ -59,6 +59,7 @@ public:
   auto getShared() -> std::shared_ptr<Dispatcher> { return shared_from_this(); }
   void enableEvents();
   bool pushRequest(Request &request);
+  auto hashForDevice(const tkm::msg::control::DeviceData &data) -> std::string;
 
 private:
   bool requestHandler(const Request &request);

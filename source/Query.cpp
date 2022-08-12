@@ -10,8 +10,6 @@
  */
 
 #include "Query.h"
-#include <cstdint>
-#include <string>
 
 namespace tkm
 {

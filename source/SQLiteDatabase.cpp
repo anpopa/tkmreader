@@ -17,14 +17,10 @@
 #include "IEventSource.h"
 #include "Query.h"
 
-#include "Control.pb.h"
-#include "Monitor.pb.h"
-
-#include <Envelope.pb.h>
-#include <Helpers.h>
 #include <any>
 #include <filesystem>
 #include <string>
+#include <taskmonitor/TaskMonitor.h>
 #include <vector>
 
 using std::shared_ptr;

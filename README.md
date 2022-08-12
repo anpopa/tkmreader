@@ -14,9 +14,10 @@ TKM-Reader depends on the following libraries
 
 | Library | Reference | Info |
 | ------ | ------ | ------ |
+| libtaskmonitor | https://gitlab.com/taskmonitor/libtaskmonitor | TaskMonitor interfaces |
+| protobuf | https://developers.google.com/protocol-buffers | Data serialization (libtaskmonitor dependency) |
 | sqlite3 | https://www.sqlite.org/index.html | Output sqlite3 database |
 | jsoncpp | https://github.com/open-source-parsers/jsoncpp | Emit Json output |
-| protobuf | https://developers.google.com/protocol-buffers | Data serialization |
 
 ## Build
 ### Compile options
