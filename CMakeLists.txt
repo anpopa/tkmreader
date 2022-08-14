@@ -15,6 +15,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake
 message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
 
 option(WITH_SYSLOG "Build with syslog logger backend" Y)
+option(WITH_INSTALL_LICENSE "Install license file on target" Y)
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
 
@@ -140,11 +141,14 @@ add_compile_options (
     )
 
 # Install license file
-install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/tkmreader/)
+if(WITH_INSTALL_LICENSE)
+    install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/tkmreader/)
+endif()
 
 # Status reporting
 message (STATUS "SYSTEM_TYPE: "          ${CMAKE_SYSTEM_NAME})
 message (STATUS "CMAKE_BUILD_TYPE: "     ${CMAKE_BUILD_TYPE})
+message (STATUS "WITH_INSTALL_LICENSE: " ${WITH_INSTALL_LICENSE})
 message (STATUS "WITH_SYSLOG: "          ${WITH_SYSLOG})
 message (STATUS "WITH_TESTS: "           ${WITH_TESTS})
 message (STATUS "WITH_TIDY: "            ${WITH_TIDY})
