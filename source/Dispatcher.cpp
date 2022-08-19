@@ -669,8 +669,8 @@ static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sys
 
   for (const auto &diskEntry : sysProcDiskStats.disk()) {
     Json::Value entry;
-    entry["major"] = diskEntry.major();
-    entry["minor"] = diskEntry.minor();
+    entry["major"] = diskEntry.node_major();
+    entry["minor"] = diskEntry.node_minor();
     entry["name"] = diskEntry.name();
     entry["reads_completed"] = diskEntry.reads_completed();
     entry["reads_merged"] = diskEntry.reads_merged();

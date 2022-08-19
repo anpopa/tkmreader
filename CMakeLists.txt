@@ -1,47 +1,43 @@
 cmake_minimum_required(VERSION 3.7.2)
-project(TaskMonitorReader)
+project(TaskMonitorReader
+        LANGUAGES CXX
+        VERSION 1.5.0
+)
 
 set(CMAKE_PROJECT_HOMEPAGE_URL "https://gitlab.com/taskmonitor/tkm-reader")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# BaseSoftwareInfrastructure
-set(BSWINFRA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bswinfra)
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${BSWINFRA_DIR}/cmake")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/bswinfra/cmake")
 
-message (STATUS "Module paths: ${CMAKE_MODULE_PATH}")
-
+# options
 option(WITH_SYSLOG "Build with syslog logger backend" Y)
 option(WITH_INSTALL_LICENSE "Install license file on target" Y)
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
 
 # Build time configuration setup
-if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+if(EXISTS .git)
     execute_process(
-        COMMAND git --git-dir "${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse --short HEAD
+        COMMAND git rev-parse --short HEAD
         OUTPUT_VARIABLE GIT_SHA1
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-else(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    set(GIT_SHA1 "")
-endif(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    )
+    set(PROJECT_VERSION_TWEAK ${GIT_SHA1})
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
         "Choose the type of build: Debug, Release, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
 
-# Enable collector interfaces
-set(WITH_COLLECTOR_CONTROL ON)
+if(WITH_TIDY)
+    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+endif()
 
-set(PROJECT_VERSION_MAJOR "1")
-set(PROJECT_VERSION_MINOR "5")
-set(PROJECT_VERSION_PATCH ${GIT_SHA1})
-
+# cmake modules
 include(GNUInstallDirs)
 include(Packing)
 include(BSWInfra)
@@ -61,52 +57,50 @@ if(CMAKE_BUILD_TYPE STREQUAL Coverage)
     include(CoverageTarget)
 endif()
 
+# generate
 configure_file(
     ${CMAKE_SOURCE_DIR}/source/Defaults.h.in
-    ${CMAKE_BINARY_DIR}/source/Defaults.h)
-    
-if(WITH_TIDY)
-    set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
-endif()
-
-include_directories(${CMAKE_SOURCE_DIR}/source)
-include_directories(${CMAKE_BINARY_DIR}/source)
-
-if (${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
-    link_directories(/usr/local/lib)
-endif()
+    ${CMAKE_BINARY_DIR}/source/Defaults.h @ONLY)
 
 # Dependencies
-find_package          (PkgConfig REQUIRED)
-find_package          (Threads REQUIRED)
-set                   (LIBS ${LIBS} pthread)
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(tkm REQUIRED)
+find_package(jsoncpp REQUIRED)
+find_package(SQLite3 REQUIRED)
 
-# Use protobuf library (dependency for libtaskmonitor)
-include               (FindProtobuf)
-find_package          (Protobuf REQUIRED)
-set                   (LIBS ${LIBS} ${PROTOBUF_LIBRARY})
+# binary
+add_executable(tkmreader
+    source/Query.cpp
+    source/JsonWriter.cpp
+    source/Dispatcher.cpp
+    source/Connection.cpp
+    source/Application.cpp
+    source/Arguments.cpp
+    source/SQLiteDatabase.cpp
+    source/Main.cpp
+    ${BINARY_SRC}
+)
 
-# Use libtaskmonitor
-pkg_check_modules     (LIBTKM libtaskmonitor REQUIRED)
-include_directories   (${LIBTKM_INCLUDE_DIRS})
-set                   (LIBS ${LIBS} ${LIBTKM_LIBRARIES})
+target_link_libraries(tkmreader
+    PRIVATE
+        BSWInfra
+        pthread
+        stdc++fs
+        tkm::tkm
+        jsoncpp
+        sqlite3
+        ${PROTOBUF_LIBRARY}
+)
 
-# Use jsoncpp
-pkg_check_modules     (JSONCPP jsoncpp>=1.9.4 REQUIRED)
-include_directories   (${JSONCPP_INCLUDE_DIRS})
-set                   (LIBS ${LIBS} ${JSONCPP_LIBRARIES})
-
-# Use sqlite3
-find_package          (SQLite3 REQUIRED)
-include_directories   (${SQLITE3_INCLUDE_DIR})
-set                   (LIBS ${LIBS} ${SQLite3_LIBRARIES})
-
-add_subdirectory(source)
-
-if(WITH_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+include_directories(
+    ${Protobuf_INCLUDE_DIRS}
+    ${jsoncpp_INCLUDE_DIRS}
+    ${SQLite3_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/source
+    ${CMAKE_BINARY_DIR}/source
+)
 
 # Build flags
 add_compile_options (
@@ -139,6 +133,14 @@ add_compile_options (
     -Wcast-align
     -Wredundant-decls
     )
+
+if(WITH_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# install
+install(TARGETS tkmreader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install license file
 if(WITH_INSTALL_LICENSE)

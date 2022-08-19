@@ -28,7 +28,7 @@ public:
 
   Defaults()
   {
-    m_table.insert(std::pair<Default, std::string>(Default::Version, "@GIT_SHA1@"));
+    m_table.insert(std::pair<Default, std::string>(Default::Version, "@PROJECT_VERSION@"));
     m_table.insert(std::pair<Default, std::string>(Default::Address, "localhost"));
     m_table.insert(std::pair<Default, std::string>(Default::Port, "3357"));
     m_table.insert(std::pair<Default, std::string>(Default::Name, "unknown"));

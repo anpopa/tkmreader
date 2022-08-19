@@ -19,14 +19,14 @@
 #include <getopt.h>
 #include <iostream>
 #include <map>
+#include <taskmonitor/taskmonitor.h>
 
-using namespace std;
 using namespace tkm::reader;
 
 static void terminate(int signum)
 {
   logInfo() << "Received signal " << signum;
-  exit(EXIT_SUCCESS);
+  ::exit(EXIT_SUCCESS);
 }
 
 auto main(int argc, char **argv) -> int
@@ -72,41 +72,41 @@ auto main(int argc, char **argv) -> int
                                                          tkmDefaults.valFor(Defaults::Val::True)));
       break;
     case 'h':
-      help = true;
-      break;
     default:
+      help = true;
       break;
     }
   }
 
   if (help) {
-    cout << "tkm-reader: read data stream from a taskmonitor device\n"
-         << "version: " << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version) << "\n\n";
-    cout << "Usage: tkm-reader [OPTIONS] \n\n";
-    cout << "  General:\n";
-    cout << "     --name, -n      <string>  Device name (default unknown)\n";
-    cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
-    cout << "     --port, -p      <int>     Device port number (default 3357)\n";
-    cout << "     --verbose, -v             Print info messages on STDOUT\n";
-    cout << "  Output:\n";
-    cout << "     --init, -i                Force output initialization if files exist\n";
-    cout << "     --database, -d  <string>  Path to output database file. If not set DB output is "
-            "disabled\n";
-    cout << "     --json, -j      <string>  Path to output json file. Use STDOUT if not set\n";
-    cout << "                               Hint: Can use /dev/null to ignore the output\n";
-    cout << "  Help:\n";
-    cout << "     --help, -h                Print this help\n\n";
+    std::cout << "TaskMonitorReader: read and store data from taskmonitor service\n"
+              << "Version: " << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version)
+              << " libtkm: " << TKMLIB_VERSION << "\n\n";
+    std::cout << "Usage: tkmreader [OPTIONS] \n\n";
+    std::cout << "  General:\n";
+    std::cout << "     --name, -n      <string>  Device name (default unknown)\n";
+    std::cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
+    std::cout << "     --port, -p      <int>     Device port number (default 3357)\n";
+    std::cout << "     --verbose, -v             Print info messages on STDOUT\n";
+    std::cout << "  Output:\n";
+    std::cout << "     --init, -i                Force output initialization if files exist\n";
+    std::cout
+        << "     --database, -d  <string>  Path to output database file. If not set DB output is "
+           "disabled\n";
+    std::cout << "     --json, -j      <string>  Path to output json file. Use STDOUT if not set\n";
+    std::cout << "                               Hint: Can use /dev/null to ignore the output\n";
+    std::cout << "  Help:\n";
+    std::cout << "     --help, -h                Print this help\n\n";
 
-    exit(EXIT_SUCCESS);
+    ::exit(EXIT_SUCCESS);
   }
 
-  signal(SIGINT, terminate);
-  signal(SIGTERM, terminate);
+  ::signal(SIGINT, terminate);
+  ::signal(SIGTERM, terminate);
 
   try {
     Application app{"TKM-Reader", "TaskMonitor Reader", args};
 
-    // Prepare output data
     Dispatcher::Request prepareRequest{
         .action = Dispatcher::Action::PrepareData,
     };
@@ -114,7 +114,7 @@ auto main(int argc, char **argv) -> int
 
     app.run();
   } catch (std::exception &e) {
-    cout << "Application start failed. " << e.what() << endl;
+    std::cout << "Application start failed. " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
 
