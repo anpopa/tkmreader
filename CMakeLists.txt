@@ -67,8 +67,10 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(tkm REQUIRED)
-find_package(jsoncpp REQUIRED)
 find_package(SQLite3 REQUIRED)
+
+pkg_check_modules(JSONCPP jsoncpp>=1.9.4 REQUIRED)
+include_directories(${JSONCPP_INCLUDE_DIRS})
 
 # binary
 add_executable(tkmreader
@@ -80,18 +82,17 @@ add_executable(tkmreader
     source/Arguments.cpp
     source/SQLiteDatabase.cpp
     source/Main.cpp
-    ${BINARY_SRC}
 )
 
 target_link_libraries(tkmreader
     PRIVATE
         BSWInfra
         pthread
-        stdc++fs
         tkm::tkm
         jsoncpp
         sqlite3
         ${PROTOBUF_LIBRARY}
+        ${JSONCPP_LIBRARY}
 )
 
 include_directories(
