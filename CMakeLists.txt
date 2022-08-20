@@ -57,6 +57,10 @@ if(CMAKE_BUILD_TYPE STREQUAL Coverage)
     include(CoverageTarget)
 endif()
 
+if (${CMAKE_SYSTEM_NAME} STREQUAL FreeBSD)
+    link_directories(/usr/local/lib)
+endif()
+
 # generate
 configure_file(
     ${CMAKE_SOURCE_DIR}/source/Defaults.h.in
