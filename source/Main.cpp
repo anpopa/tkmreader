@@ -82,7 +82,7 @@ auto main(int argc, char **argv) -> int
     std::cout << "TaskMonitorReader: read and store data from taskmonitor service\n"
               << "Version: " << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version)
               << " libtkm: " << TKMLIB_VERSION << "\n\n";
-    std::cout << "Usage: tkmreader [OPTIONS] \n\n";
+    std::cout << "Usage: tkm-reader [OPTIONS] \n\n";
     std::cout << "  General:\n";
     std::cout << "     --name, -n      <string>  Device name (default unknown)\n";
     std::cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
