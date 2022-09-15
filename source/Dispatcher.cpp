@@ -559,6 +559,7 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   cpu["all"] = sysProcStat.cpu().all();
   cpu["usr"] = sysProcStat.cpu().usr();
   cpu["sys"] = sysProcStat.cpu().sys();
+  cpu["iow"] = sysProcStat.cpu().iow();
   head["cpu"] = cpu;
 
   for (const auto &cpuCore : sysProcStat.core()) {
@@ -566,6 +567,7 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
     core["all"] = cpuCore.all();
     core["usr"] = cpuCore.usr();
     core["sys"] = cpuCore.sys();
+    core["iow"] = cpuCore.iow();
     head[cpuCore.name()] = core;
   }
 

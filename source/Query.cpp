@@ -94,6 +94,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatAll) << " INTEGER NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatUsr) << " INTEGER NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatSys) << " INTEGER NOT NULL, "
+          << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatIow) << " INTEGER NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::SessionId) << " INTEGER NOT NULL, ";
     } else {
       out << m_sysProcStatColumn.at(SysProcStatColumn::Id) << " SERIAL PRIMARY KEY, "
@@ -104,6 +105,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatAll) << " BIGINT NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatUsr) << " BIGINT NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatSys) << " BIGINT NOT NULL, "
+          << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatIow) << " BIGINT NOT NULL, "
           << m_sysProcStatColumn.at(SysProcStatColumn::SessionId) << " INTEGER NOT NULL, ";
     }
     out << "CONSTRAINT KFSession FOREIGN KEY("
@@ -813,10 +815,11 @@ auto Query::addData(Query::Type type,
         << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatAll) << ","
         << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatUsr) << ","
         << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatSys) << ","
+        << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatIow) << ","
         << m_sysProcStatColumn.at(SysProcStatColumn::SessionId) << ") VALUES ('" << systemTime
         << "', '" << monotonicTime << "', '" << receiveTime << "', '" << sysProcStat.cpu().name()
         << "', '" << sysProcStat.cpu().all() << "', '" << sysProcStat.cpu().usr() << "', '"
-        << sysProcStat.cpu().sys() << "', ";
+        << sysProcStat.cpu().sys() << "', '" << sysProcStat.cpu().iow() << "', ";
 
     if (type == Query::Type::SQLite3) {
       out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
@@ -839,9 +842,11 @@ auto Query::addData(Query::Type type,
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatAll) << ","
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatUsr) << ","
           << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatSys) << ","
+          << m_sysProcStatColumn.at(SysProcStatColumn::CPUStatIow) << ","
           << m_sysProcStatColumn.at(SysProcStatColumn::SessionId) << ") VALUES ('" << systemTime
           << "', '" << monotonicTime << "', '" << receiveTime << "', '" << cpuStat.name() << "', '"
-          << cpuStat.all() << "', '" << cpuStat.usr() << "', '" << cpuStat.sys() << "', ";
+          << cpuStat.all() << "', '" << cpuStat.usr() << "', '" << cpuStat.sys() << "', '"
+          << cpuStat.iow() << "', ";
 
       if (type == Query::Type::SQLite3) {
         out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM "
