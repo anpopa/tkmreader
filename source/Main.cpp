@@ -33,6 +33,7 @@ auto main(int argc, char **argv) -> int
 {
   std::map<Arguments::Key, std::string> args;
   int longIndex = 0;
+  bool version = false;
   bool help = false;
   int c;
 
@@ -42,7 +43,8 @@ auto main(int argc, char **argv) -> int
                               {"port", required_argument, nullptr, 'p'},
                               {"database", required_argument, nullptr, 'd'},
                               {"json", required_argument, nullptr, 'j'},
-                              {"verbose", no_argument, nullptr, 'v'},
+                              {"verbose", no_argument, nullptr, 'x'},
+                              {"version", no_argument, nullptr, 'v'},
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
@@ -67,15 +69,24 @@ auto main(int argc, char **argv) -> int
     case 'j':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::JsonPath, optarg));
       break;
-    case 'v':
+    case 'x':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Verbose,
                                                          tkmDefaults.valFor(Defaults::Val::True)));
+      break;
+    case 'v':
+      version = true;
       break;
     case 'h':
     default:
       help = true;
       break;
     }
+  }
+
+  if (version) {
+    std::cout << "tkmreader: " << tkmDefaults.getFor(tkm::reader::Defaults::Default::Version)
+              << " libtkm: " << TKMLIB_VERSION << "\n";
+    ::exit(EXIT_SUCCESS);
   }
 
   if (help) {
