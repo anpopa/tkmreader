@@ -24,6 +24,8 @@ namespace tkm::reader
 class JsonWriter
 {
 public:
+  enum class OutputType { Disabled, StandardOut, FilePath };
+
   static JsonWriter *getInstance() { return (!instance) ? instance = new JsonWriter : instance; }
 
   struct Payload {

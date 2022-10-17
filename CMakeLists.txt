@@ -77,7 +77,7 @@ pkg_check_modules(JSONCPP jsoncpp>=1.9.4 REQUIRED)
 include_directories(${JSONCPP_INCLUDE_DIRS})
 
 # binary
-add_executable(tkm-reader
+add_executable(tkmreader
     source/Query.cpp
     source/JsonWriter.cpp
     source/Dispatcher.cpp
@@ -88,7 +88,7 @@ add_executable(tkm-reader
     source/Main.cpp
 )
 
-target_link_libraries(tkm-reader
+target_link_libraries(tkmreader
     PRIVATE
         BSWInfra
         pthread
@@ -145,7 +145,7 @@ if(WITH_TESTS)
 endif()
 
 # install
-install(TARGETS tkm-reader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS tkmreader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install license file
 if(WITH_INSTALL_LICENSE)

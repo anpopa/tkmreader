@@ -22,11 +22,19 @@ namespace tkm::reader
 
 JsonWriter *JsonWriter::instance = nullptr;
 static std::unique_ptr<std::ofstream> m_outStream = nullptr;
-static bool useStdOut = true;
+static JsonWriter::OutputType outputType = JsonWriter::OutputType::Disabled;
 
 JsonWriter::JsonWriter()
 {
   if (App()->getArguments()->hasFor(Arguments::Key::JsonPath)) {
+    if (App()->getArguments()->getFor(Arguments::Key::JsonPath) == "stdout") {
+      outputType = JsonWriter::OutputType::StandardOut;
+    } else {
+      outputType = JsonWriter::OutputType::FilePath;
+    }
+  }
+
+  if (outputType == JsonWriter::OutputType::FilePath) {
     m_outStream =
         std::make_unique<std::ofstream>(App()->getArguments()->getFor(Arguments::Key::JsonPath),
                                         std::ofstream::out | std::ofstream::app);
@@ -34,18 +42,25 @@ JsonWriter::JsonWriter()
     if (m_outStream->tellp() > 0) {
       *m_outStream << std::endl;
     }
-    useStdOut = false;
   }
+
   builder["commentStyle"] = "None";
   builder["indentation"] = "";
 }
 
 void JsonWriter::Payload::print()
 {
-  if (useStdOut) {
+  switch (outputType) {
+  case OutputType::StandardOut:
     std::cout << m_stream.str() << std::endl;
-  } else {
-    *m_outStream << m_stream.str() << std::endl;
+    break;
+  case OutputType::FilePath:
+    if (m_outStream != nullptr) {
+      *m_outStream << m_stream.str() << std::endl;
+    }
+    break;
+  default:
+    break;
   }
 }
 

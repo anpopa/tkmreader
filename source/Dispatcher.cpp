@@ -29,7 +29,6 @@
 namespace tkm::reader
 {
 
-static auto splitString(const std::string &s, char delim) -> std::vector<std::string>;
 static void
 printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint64_t monotonicTime);
 static void
