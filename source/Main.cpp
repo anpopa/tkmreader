@@ -119,9 +119,9 @@ auto main(int argc, char **argv) -> int
   try {
     Application app{"TKMReader", "TaskMonitor Reader", args};
 
-    Dispatcher::Request prepareRequest{
-        .action = Dispatcher::Action::PrepareData,
-    };
+    Dispatcher::Request prepareRequest{.action = Dispatcher::Action::PrepareData,
+                                       .bulkData = std::make_any<int>(0),
+                                       .args = std::map<tkm::reader::Defaults::Arg, std::string>()};
     app.getDispatcher()->pushRequest(prepareRequest);
 
     app.run();

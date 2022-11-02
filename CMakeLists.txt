@@ -17,6 +17,8 @@ option(WITH_SYSLOG "Build with syslog logger backend" Y)
 option(WITH_INSTALL_LICENSE "Install license file on target" Y)
 option(WITH_TESTS "Build test suite" N)
 option(WITH_TIDY "Build with clang-tidy" N)
+option(WITH_ASAN "Build with address sanitize" N)
+option(WITH_GCC_HARDEN_FLAGS "Build with GCC harden flags" N)
 
 # Build time configuration setup
 if(EXISTS .git)
@@ -35,6 +37,44 @@ endif()
 
 if(WITH_TIDY)
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+endif()
+
+if(WITH_ASAN)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
+
+if(WITH_GCC_HARDEN_FLAGS)
+    # Build flags
+    add_compile_options (
+        -Wall
+        -Wextra
+        -Wno-unused-function
+        -Wformat
+        -Wno-variadic-macros
+        -Wno-strict-aliasing
+        -fstack-protector-strong
+        -fwrapv
+        -Wformat-signedness
+        -Wmissing-include-dirs
+        -Wimplicit-fallthrough=5
+        -Wunused-parameter
+        -Wuninitialized
+        -Walloca
+        -Wduplicated-branches
+        -Wduplicated-cond
+        -Wfloat-equal
+        -Wshadow
+        -Wcast-qual
+        -Wconversion
+        -Wsign-conversion
+        -Wlogical-op
+        -Werror
+        -Wformat-security
+        -Walloc-zero
+        -Wcast-align
+        -Wredundant-decls
+    )
 endif()
 
 # cmake modules
@@ -107,38 +147,6 @@ include_directories(
     ${CMAKE_BINARY_DIR}/source
 )
 
-# Build flags
-add_compile_options (
-    -Wall
-    -Wextra
-    -Wno-unused-function
-    -Wformat
-    -Wno-variadic-macros
-    -Wno-strict-aliasing
-    -D_FORTIFY_SOURCE=2
-    -fstack-protector-strong
-    -fwrapv
-    -Wformat-signedness
-    -Wmissing-include-dirs
-    -Wimplicit-fallthrough=5
-    -Wunused-parameter
-    -Wuninitialized
-    -Walloca
-    -Wduplicated-branches
-    -Wduplicated-cond
-    -Wfloat-equal
-    -Wshadow
-    -Wcast-qual
-    -Wconversion
-    -Wsign-conversion
-    -Wlogical-op
-    -Werror
-    -Wformat-security
-    -Walloc-zero
-    -Wcast-align
-    -Wredundant-decls
-    )
-
 if(WITH_TESTS)
     enable_testing()
     add_subdirectory(tests)
@@ -153,9 +161,11 @@ if(WITH_INSTALL_LICENSE)
 endif()
 
 # Status reporting
-message (STATUS "SYSTEM_TYPE: "          ${CMAKE_SYSTEM_NAME})
-message (STATUS "CMAKE_BUILD_TYPE: "     ${CMAKE_BUILD_TYPE})
-message (STATUS "WITH_INSTALL_LICENSE: " ${WITH_INSTALL_LICENSE})
-message (STATUS "WITH_SYSLOG: "          ${WITH_SYSLOG})
-message (STATUS "WITH_TESTS: "           ${WITH_TESTS})
-message (STATUS "WITH_TIDY: "            ${WITH_TIDY})
+message (STATUS "SYSTEM_TYPE: "             ${CMAKE_SYSTEM_NAME})
+message (STATUS "CMAKE_BUILD_TYPE: "        ${CMAKE_BUILD_TYPE})
+message (STATUS "WITH_INSTALL_LICENSE: "    ${WITH_INSTALL_LICENSE})
+message (STATUS "WITH_SYSLOG: "             ${WITH_SYSLOG})
+message (STATUS "WITH_TESTS: "              ${WITH_TESTS})
+message (STATUS "WITH_TIDY: "               ${WITH_TIDY})
+message (STATUS "WITH_ASAN: "               ${WITH_ASAN})
+message (STATUS "WITH_GCC_HARDEN_FLAGS: "   ${WITH_GCC_HARDEN_FLAGS})

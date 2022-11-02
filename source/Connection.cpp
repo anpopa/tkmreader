@@ -63,7 +63,9 @@ Connection::Connection()
 
           switch (msg.type()) {
           case tkm::msg::monitor::Message_Type_SetSession: {
-            Dispatcher::Request rq{.action = Dispatcher::Action::SetSession};
+            Dispatcher::Request rq{.action = Dispatcher::Action::SetSession,
+                                   .bulkData = std::make_any<int>(0),
+                                   .args = std::map<tkm::reader::Defaults::Arg, std::string>()};
             tkm::msg::monitor::SessionInfo sessionInfo;
 
             msg.payload().UnpackTo(&sessionInfo);
@@ -78,18 +80,22 @@ Connection::Connection()
             break;
           }
           case tkm::msg::monitor::Message_Type_Data: {
-            Dispatcher::Request rq{.action = Dispatcher::Action::ProcessData};
+            Dispatcher::Request rq{.action = Dispatcher::Action::ProcessData,
+                                   .bulkData = std::make_any<int>(0),
+                                   .args = std::map<tkm::reader::Defaults::Arg, std::string>()};
             tkm::msg::monitor::Data data;
 
             msg.payload().UnpackTo(&data);
-            data.set_receive_time_sec(time(NULL));
+            data.set_receive_time_sec(static_cast<uint64_t>(time(NULL)));
             rq.bulkData = std::make_any<tkm::msg::monitor::Data>(data);
 
             App()->getDispatcher()->pushRequest(rq);
             break;
           }
           case tkm::msg::monitor::Message_Type_Status: {
-            Dispatcher::Request rq{.action = Dispatcher::Action::Status};
+            Dispatcher::Request rq{.action = Dispatcher::Action::Status,
+                                   .bulkData = std::make_any<int>(0),
+                                   .args = std::map<tkm::reader::Defaults::Arg, std::string>()};
             tkm::msg::monitor::Status s;
 
             msg.payload().UnpackTo(&s);
@@ -116,7 +122,9 @@ Connection::Connection()
   // If the event is removed we stop the main application
   setFinalize([]() {
     logInfo() << "Device connection terminated";
-    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect};
+    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect,
+                            .bulkData = std::make_any<int>(0),
+                            .args = std::map<tkm::reader::Defaults::Arg, std::string>()};
     App()->getDispatcher()->pushRequest(nrq);
   });
 }
@@ -151,7 +159,7 @@ auto Connection::connect() -> int
     port = std::stoi(tkmDefaults.getFor(Defaults::Default::Port));
     logWarn() << "Cannot convert port number from config (using 3357): " << e.what();
   }
-  m_addr.sin_port = htons(port);
+  m_addr.sin_port = htons(static_cast<uint16_t>(port));
 
   if (::connect(m_sockFd, (struct sockaddr *) &m_addr, sizeof(struct sockaddr_in)) == -1) {
     if (errno == EINPROGRESS) {

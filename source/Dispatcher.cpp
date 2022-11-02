@@ -62,9 +62,9 @@ static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatche
 static bool doConnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doReconnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doSendDescriptor(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doRequestSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doRequestSession();
 static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
-static bool doStartStream(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
+static bool doStartStream();
 static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doStatus(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doQuit(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -91,11 +91,11 @@ auto Dispatcher::requestHandler(const Request &request) -> bool
   case Dispatcher::Action::SendDescriptor:
     return doSendDescriptor(getShared(), request);
   case Dispatcher::Action::RequestSession:
-    return doRequestSession(getShared(), request);
+    return doRequestSession();
   case Dispatcher::Action::SetSession:
     return doSetSession(getShared(), request);
   case Dispatcher::Action::StartStream:
-    return doStartStream(getShared(), request);
+    return doStartStream();
   case Dispatcher::Action::ProcessData:
     return doProcessData(getShared(), request);
   case Dispatcher::Action::Status:
@@ -129,7 +129,9 @@ static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatche
   App()->getDeviceData().set_hash(mgr->hashForDevice(App()->getDeviceData()));
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
-    IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase};
+    IDatabase::Request dbInit = {.action = IDatabase::Action::InitDatabase,
+                                 .bulkData = std::make_any<int>(0),
+                                 .args = std::map<Defaults::Arg, std::string>()};
 
     if (App()->getArguments()->hasFor(Arguments::Key::Init)) {
       const std::map<Defaults::Arg, std::string> forcedArgument{
@@ -172,7 +174,9 @@ static bool doReconnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher:
 
   if ((App()->getSessionInfo().hash().length() > 0) && (App()->getSessionData().ended() == 0)) {
     if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
-      IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession};
+      IDatabase::Request dbrq = {.action = IDatabase::Action::EndSession,
+                                 .bulkData = std::make_any<int>(0),
+                                 .args = std::map<Defaults::Arg, std::string>()};
       App()->getDatabase()->pushRequest(dbrq);
     }
   }
@@ -205,16 +209,20 @@ static bool doSendDescriptor(const std::shared_ptr<Dispatcher> mgr, const Dispat
   descriptor.set_id("Reader");
   if (!sendCollectorDescriptor(App()->getConnection()->getFD(), descriptor)) {
     logError() << "Failed to send descriptor";
-    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect};
+    Dispatcher::Request nrq{.action = Dispatcher::Action::Reconnect,
+                            .bulkData = std::make_any<int>(0),
+                            .args = std::map<Defaults::Arg, std::string>()};
     return mgr->pushRequest(nrq);
   }
   logDebug() << "Sent collector descriptor";
 
-  Dispatcher::Request nrq{.action = Dispatcher::Action::RequestSession};
+  Dispatcher::Request nrq{.action = Dispatcher::Action::RequestSession,
+                          .bulkData = std::make_any<int>(0),
+                          .args = std::map<Defaults::Arg, std::string>()};
   return mgr->pushRequest(nrq);
 }
 
-static bool doRequestSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
+static bool doRequestSession()
 {
   tkm::msg::Envelope envelope;
   tkm::msg::collector::Request request;
@@ -252,19 +260,23 @@ static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher
   writeJsonStream() << head;
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
-    IDatabase::Request dbReq = {.action = IDatabase::Action::AddSession, .bulkData = rq.bulkData};
+    IDatabase::Request dbReq = {.action = IDatabase::Action::AddSession,
+                                .bulkData = rq.bulkData,
+                                .args = std::map<Defaults::Arg, std::string>()};
     status = App()->getDatabase()->pushRequest(dbReq);
   }
 
   if (status) {
-    Dispatcher::Request srq{.action = Dispatcher::Action::StartStream};
+    Dispatcher::Request srq{.action = Dispatcher::Action::StartStream,
+                            .bulkData = std::make_any<int>(0),
+                            .args = std::map<Defaults::Arg, std::string>()};
     status = mgr->pushRequest(srq);
   }
 
   return status;
 }
 
-static bool doStartStream(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
+static bool doStartStream()
 {
   App()->printVerbose("Reading data started for session: " + App()->getSessionInfo().hash());
   logInfo() << "Reading data started for session: " << App()->getSessionInfo().hash();
@@ -278,6 +290,8 @@ static bool doStartStream(const std::shared_ptr<Dispatcher> mgr, const Dispatche
 static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq)
 {
   const auto &data = std::any_cast<tkm::msg::monitor::Data>(rq.bulkData);
+
+  static_cast<void>(mgr); // UNUSED
 
   switch (data.what()) {
   case tkm::msg::monitor::Data_What_ProcAcct: {
@@ -345,7 +359,9 @@ static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatche
   }
 
   if (App()->getArguments()->hasFor(Arguments::Key::DatabasePath)) {
-    IDatabase::Request dbReq = {.action = IDatabase::Action::AddData, .bulkData = rq.bulkData};
+    IDatabase::Request dbReq = {.action = IDatabase::Action::AddData,
+                                .bulkData = rq.bulkData,
+                                .args = std::map<Defaults::Arg, std::string>()};
     return App()->getDatabase()->pushRequest(dbReq);
   }
 

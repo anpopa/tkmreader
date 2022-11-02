@@ -45,8 +45,8 @@ public:
 
   typedef struct Request {
     Action action;
-    std::map<Defaults::Arg, std::string> args;
     std::any bulkData;
+    std::map<Defaults::Arg, std::string> args;
   } Request;
 
 public:
