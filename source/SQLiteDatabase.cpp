@@ -36,8 +36,6 @@ static bool doInitDatabase(const shared_ptr<SQLiteDatabase> db, const IDatabase:
 static bool doAddDevice(const shared_ptr<SQLiteDatabase> db);
 static bool doConnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
 static bool doDisconnect(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
-static bool doStartDeviceSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
-static bool doStopDeviceSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
 static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
 static bool doEndSession(const shared_ptr<SQLiteDatabase> db);
 static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Request &rq);
@@ -225,8 +223,7 @@ static bool doAddSession(const shared_ptr<SQLiteDatabase> db, const IDatabase::R
 
   auto sesId = -1;
   SQLiteDatabase::Query queryCheckExisting{.type = SQLiteDatabase::QueryType::HasSession,
-                                           .raw = nullptr};
-  queryCheckExisting.raw = &sesId;
+                                           .raw = &sesId};
 
   auto status =
       db->runQuery(tkmQuery.hasSession(Query::Type::SQLite3, App()->getSessionData().hash()),
