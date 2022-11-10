@@ -502,7 +502,9 @@ printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint
     entry["ctx_name"] = procEntry.ctx_name();
     entry["cpu_time"] = procEntry.cpu_time();
     entry["cpu_percent"] = procEntry.cpu_percent();
+    entry["mem_vmsize"] = procEntry.mem_vmsize();
     entry["mem_vmrss"] = procEntry.mem_vmrss();
+    entry["mem_shared"] = procEntry.mem_shared();
     head[std::to_string(procEntry.pid())] = entry;
   }
 
@@ -529,6 +531,7 @@ static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
     entry["total_cpu_time"] = ctxEntry.total_cpu_time();
     entry["total_cpu_percent"] = ctxEntry.total_cpu_percent();
     entry["total_mem_vmrss"] = ctxEntry.total_mem_vmrss();
+    entry["total_mem_shared"] = ctxEntry.total_mem_shared();
     head[ctxEntry.ctx_name()] = entry;
   }
 
