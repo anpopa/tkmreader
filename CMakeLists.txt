@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(TaskMonitorReader
         LANGUAGES CXX
-        VERSION 1.5.6
+        VERSION 1.5.7
 )
 
 set(CMAKE_PROJECT_HOMEPAGE_URL "https://gitlab.com/taskmonitor/tkm-reader")
