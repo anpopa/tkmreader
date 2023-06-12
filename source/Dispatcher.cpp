@@ -665,6 +665,13 @@ static void printSysProcMemInfo(const tkm::msg::monitor::SysProcMemInfo &sysProc
   meminfo["mem_available"] = sysProcMemInfo.mem_available();
   meminfo["mem_cached"] = sysProcMemInfo.mem_cached();
   meminfo["mem_available_percent"] = sysProcMemInfo.mem_percent();
+  meminfo["active"] = sysProcMemInfo.active();
+  meminfo["inactive"] = sysProcMemInfo.inactive();
+  meminfo["slab"] = sysProcMemInfo.slab();
+  meminfo["kreclaimable"] = sysProcMemInfo.kreclaimable();
+  meminfo["sreclaimable"] = sysProcMemInfo.sreclaimable();
+  meminfo["sunreclaim"] = sysProcMemInfo.sunreclaim();
+  meminfo["kernel_stack"] = sysProcMemInfo.kernel_stack();
   meminfo["swap_total"] = sysProcMemInfo.swap_total();
   meminfo["swap_free"] = sysProcMemInfo.swap_free();
   meminfo["swap_cached"] = sysProcMemInfo.swap_cached();
