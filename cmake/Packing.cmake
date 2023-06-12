@@ -33,7 +33,7 @@ set(CPACK_DEBIAN_DEBUGINFO_PACKAGE OFF)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Alin Popa")
 set(CPACK_DEBIAN_PACKAGE_SECTION "Utilities")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libtaskmonitor-bin (>=1.0.5), libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31), libprotobuf17 (>=3.6)")
+  "libtaskmonitor-bin (>=1.1.0), libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31), libprotobuf17 (>=3.6)")
 
 # FreeBSD
 set(CPACK_FREEBSD_DEBUGINFO_PACKAGE OFF)
