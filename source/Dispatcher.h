@@ -61,11 +61,14 @@ public:
   bool pushRequest(Request &request);
   auto hashForDevice(const tkm::msg::control::DeviceData &data) -> std::string;
 
+  void resetRequestSessionTimer(void);
+
 private:
   bool requestHandler(const Request &request);
 
 private:
   std::shared_ptr<AsyncQueue<Request>> m_queue = nullptr;
+  std::shared_ptr<Timer> m_reqSessionTimer = nullptr;
 };
 
 } // namespace tkm::reader

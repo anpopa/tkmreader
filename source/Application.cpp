@@ -73,7 +73,7 @@ Application::Application(const string &name,
 
 void Application::resetConnection()
 {
-  m_connection.reset();
+  resetInactivityTimer(0);
   m_connection = std::make_shared<Connection>();
 }
 
@@ -152,16 +152,19 @@ void Application::stopUpdateLanes(void)
   if (m_fastLaneTimer != nullptr) {
     m_fastLaneTimer->stop();
     remEventSource(m_fastLaneTimer);
+    m_fastLaneTimer.reset();
   }
 
   if (m_paceLaneTimer != nullptr) {
     m_paceLaneTimer->stop();
     remEventSource(m_paceLaneTimer);
+    m_paceLaneTimer.reset();
   }
 
   if (m_slowLaneTimer != nullptr) {
     m_slowLaneTimer->stop();
     remEventSource(m_slowLaneTimer);
+    m_slowLaneTimer.reset();
   }
 }
 
@@ -474,6 +477,43 @@ void Application::configUpdateLanes(void)
   }
 
   m_dataSources.commit();
+}
+
+void Application::resetInactivityTimer(size_t intervalUs)
+{
+  if (m_inactiveTimer != nullptr) {
+    m_inactiveTimer->stop();
+    remEventSource(m_inactiveTimer);
+    m_inactiveTimer.reset();
+  }
+
+  if (intervalUs > 0) {
+    m_inactiveTimer = std::make_shared<Timer>("SessionInactiveTimer", [this, intervalUs]() {
+      auto connection = m_connection;
+
+      if (connection == nullptr) {
+        return false;
+      }
+
+      using USec = std::chrono::microseconds;
+      auto timeNow = std::chrono::steady_clock::now();
+      auto durationUs =
+          std::chrono::duration_cast<USec>(timeNow - connection->getLastUpdateTime()).count();
+
+      // We reset the connection if no update in 5 intervals
+      if (durationUs > (intervalUs * 5)) {
+        logWarn() << "Session " << getSessionInfo().name() << " is inactive. Reset connection";
+        remEventSource(m_connection);
+        resetConnection();
+        return false;
+      }
+
+      return true;
+    });
+
+    m_inactiveTimer->start(intervalUs, true);
+    addEventSource(m_inactiveTimer);
+  }
 }
 
 } // namespace tkm::reader

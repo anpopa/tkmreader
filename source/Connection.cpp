@@ -9,6 +9,7 @@
  *-
  */
 
+#include <chrono>
 #include <csignal>
 #include <errno.h>
 #include <filesystem>
@@ -20,6 +21,7 @@
 #include "Application.h"
 #include "Connection.h"
 #include "Defaults.h"
+#include "Logger.h"
 
 namespace tkm::reader
 {
@@ -33,6 +35,7 @@ Connection::Connection()
 
   m_reader = std::make_unique<EnvelopeReader>(m_sockFd);
   m_writer = std::make_unique<EnvelopeWriter>(m_sockFd);
+  m_lastUpdateTime = std::chrono::steady_clock::now();
 
   lateSetup(
       [this]() {
@@ -60,6 +63,7 @@ Connection::Connection()
 
           tkm::msg::monitor::Message msg;
           envelope.mesg().UnpackTo(&msg);
+          m_lastUpdateTime = std::chrono::steady_clock::now();
 
           switch (msg.type()) {
           case tkm::msg::monitor::Message_Type_SetSession: {
@@ -136,8 +140,10 @@ void Connection::enableEvents()
 
 Connection::~Connection()
 {
+  logInfo() << "Connection object destructed";
   if (m_sockFd > 0) {
     ::close(m_sockFd);
+    m_sockFd = -1;
   }
 }
 
@@ -220,30 +226,6 @@ auto Connection::connect() -> int
   }
   if (setsockopt(m_sockFd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
     logError() << "Failed to setsockopt SO_SNDTIMEO. Error: " << strerror(errno);
-    return -1;
-  }
-
-  int yes = 1;
-  if (setsockopt(m_sockFd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)) < 0) {
-    logError() << "Failed to setsockopt SO_KEEPALIVE. Error: " << strerror(errno);
-    return -1;
-  }
-
-  int idle = 1;
-  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(int)) < 0) {
-    logError() << "Failed to setsockopt TCP_KEEPIDLE. Error: " << strerror(errno);
-    return -1;
-  }
-
-  int interval = 2;
-  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(int)) < 0) {
-    logError() << "Failed to setsockopt TCP_KEEPINTVL. Error: " << strerror(errno);
-    return -1;
-  }
-
-  int maxpkt = 5;
-  if (setsockopt(m_sockFd, IPPROTO_TCP, TCP_KEEPCNT, &maxpkt, sizeof(int)) < 0) {
-    logError() << "Failed to setsockopt TCP_KEEPCNT. Error: " << strerror(errno);
     return -1;
   }
 

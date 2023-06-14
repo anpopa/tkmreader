@@ -56,7 +56,13 @@ public:
     return true;
   }
 
+  auto getLastUpdateTime() -> std::chrono::time_point<std::chrono::steady_clock> &
+  {
+    return m_lastUpdateTime;
+  }
+
 private:
+  std::chrono::time_point<std::chrono::steady_clock> m_lastUpdateTime{};
   std::unique_ptr<tkm::EnvelopeReader> m_reader = nullptr;
   std::unique_ptr<tkm::EnvelopeWriter> m_writer = nullptr;
   struct sockaddr_in m_addr = {};

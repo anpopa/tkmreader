@@ -69,6 +69,7 @@ public:
   void requestStartupData(void);
   void startUpdateLanes(void);
   void stopUpdateLanes(void);
+  void resetInactivityTimer(size_t intervalUs);
 
 public:
   Application(Application const &) = delete;
@@ -94,6 +95,7 @@ private:
   std::shared_ptr<Timer> m_fastLaneTimer = nullptr;
   std::shared_ptr<Timer> m_paceLaneTimer = nullptr;
   std::shared_ptr<Timer> m_slowLaneTimer = nullptr;
+  std::shared_ptr<Timer> m_inactiveTimer = nullptr;
 };
 
 #define App() tkm::reader::Application::getInstance()

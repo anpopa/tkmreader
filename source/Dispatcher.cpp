@@ -25,6 +25,7 @@
 #include "Dispatcher.h"
 #include "IDatabase.h"
 #include "JsonWriter.h"
+#include "Logger.h"
 
 namespace tkm::reader
 {
@@ -117,6 +118,29 @@ auto Dispatcher::hashForDevice(const tkm::msg::control::DeviceData &data) -> std
   return std::to_string(tkm::jnkHsh(tmp.c_str()));
 }
 
+void Dispatcher::resetRequestSessionTimer(void)
+{
+  if (m_reqSessionTimer != nullptr) {
+    m_reqSessionTimer->stop();
+    App()->remEventSource(m_reqSessionTimer);
+    m_reqSessionTimer.reset();
+  }
+
+  App()->getSessionInfo().clear_name();
+  m_reqSessionTimer = std::make_shared<Timer>("SessionCreationTimer", []() {
+    if (App()->getSessionInfo().name().empty()) {
+      logError() << "Create session timout. Taskmonitor not responding";
+      if (App()->getConnection() != nullptr) {
+        App()->remEventSource(App()->getConnection());
+        App()->resetConnection();
+      }
+    }
+    return false;
+  });
+  m_reqSessionTimer->start(1500000, false);
+  App()->addEventSource(m_reqSessionTimer);
+}
+
 static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &)
 {
   Dispatcher::Request rq;
@@ -182,7 +206,7 @@ static bool doReconnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher:
   }
 
   // Sleep before retrying
-  ::sleep(1);
+  ::sleep(3);
 
   App()->printVerbose("Reconnecting...");
   logInfo() << "Reconnecting to " << App()->getDeviceData().name() << " ...";
@@ -236,6 +260,8 @@ static bool doRequestSession()
 
   App()->printVerbose("Request session");
   logDebug() << "Request session to monitor";
+
+  App()->getDispatcher()->resetRequestSessionTimer();
   return App()->getConnection()->writeEnvelope(envelope);
 }
 
@@ -283,6 +309,10 @@ static bool doStartStream()
 
   App()->requestStartupData();
   App()->startUpdateLanes();
+
+  // We use the fastLaneInterval for connection inactivity monitor timer
+  const auto inactivityInterval = App()->getSessionInfo().fast_lane_interval();
+  App()->resetInactivityTimer(inactivityInterval);
 
   return true;
 }
