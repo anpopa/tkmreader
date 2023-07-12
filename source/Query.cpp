@@ -393,6 +393,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " INTEGER NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::MemRSS) << " INTEGER NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::MemPSS) << " INTEGER NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::FDCount) << " INTEGER NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::SessionId) << " INTEGER NOT NULL, ";
     } else {
       out << m_procInfoColumn.at(ProcInfoColumn::Id) << " SERIAL PRIMARY KEY, "
@@ -408,6 +409,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << " BIGINT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::MemRSS) << " BIGINT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::MemPSS) << " BIGINT NOT NULL, "
+          << m_procInfoColumn.at(ProcInfoColumn::FDCount) << " BIGINT NOT NULL, "
           << m_procInfoColumn.at(ProcInfoColumn::SessionId) << " INTEGER NOT NULL, ";
     }
     out << "CONSTRAINT KFSession FOREIGN KEY(" << m_procInfoColumn.at(ProcInfoColumn::SessionId)
@@ -427,6 +429,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemRSS) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemPSS) << " INTEGER NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalFDCount) << " INTEGER NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << " INTEGER NOT NULL, ";
     } else {
       out << m_contextInfoColumn.at(ContextInfoColumn::Id) << " SERIAL PRIMARY KEY, "
@@ -439,6 +442,7 @@ auto Query::createTables(Query::Type type) -> std::string
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemRSS) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemPSS) << " BIGINT NOT NULL, "
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalFDCount) << " BIGINT NOT NULL, "
           << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << " INTEGER NOT NULL, ";
     }
     out << "CONSTRAINT KFSession FOREIGN KEY("
@@ -1174,12 +1178,14 @@ auto Query::addData(Query::Type type,
           << m_procInfoColumn.at(ProcInfoColumn::CpuPercent) << ","
           << m_procInfoColumn.at(ProcInfoColumn::MemRSS) << ","
           << m_procInfoColumn.at(ProcInfoColumn::MemPSS) << ","
+          << m_procInfoColumn.at(ProcInfoColumn::FDCount) << ","
           << m_procInfoColumn.at(ProcInfoColumn::SessionId) << ") VALUES ('" << systemTime << "', '"
           << monotonicTime << "', '" << receiveTime << "', '" << procEntry.comm() << "', '"
           << procEntry.pid() << "', '" << procEntry.ppid() << "', '"
           << std::to_string(procEntry.ctx_id()) << "', '" << procEntry.ctx_name() << "', '"
           << procEntry.cpu_time() << "', '" << procEntry.cpu_percent() << "', '"
-          << procEntry.mem_rss() << "', '" << procEntry.mem_pss() << "', ";
+          << procEntry.mem_rss() << "', '" << procEntry.mem_pss() << "', '"
+          << procEntry.fd_count() << "', ";
     }
 
     if (type == Query::Type::SQLite3) {
@@ -1217,11 +1223,13 @@ auto Query::addData(Query::Type type,
           << m_contextInfoColumn.at(ContextInfoColumn::TotalCpuPercent) << ","
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemRSS) << ","
           << m_contextInfoColumn.at(ContextInfoColumn::TotalMemPSS) << ","
+          << m_contextInfoColumn.at(ContextInfoColumn::TotalFDCount) << ","
           << m_contextInfoColumn.at(ContextInfoColumn::SessionId) << ") VALUES ('" << systemTime
           << "', '" << monotonicTime << "', '" << receiveTime << "', '"
           << std::to_string(ctxEntry.ctx_id()) << "', '" << ctxEntry.ctx_name() << "', '"
           << ctxEntry.total_cpu_time() << "', '" << ctxEntry.total_cpu_percent() << "', '"
-          << ctxEntry.total_mem_rss() << "', '" << ctxEntry.total_mem_pss() << "', ";
+          << ctxEntry.total_mem_rss() << "', '" << ctxEntry.total_mem_pss() << "', '"
+          << ctxEntry.total_fd_count() << "', ";
     }
 
     if (type == Query::Type::SQLite3) {

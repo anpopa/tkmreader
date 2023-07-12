@@ -452,6 +452,7 @@ public:
     CpuPercent,    // int: Cpu percent in interval
     MemRSS,        // int: RSS memory usage
     MemPSS,        // int: PSS memory usage
+    FDCount,       // int: Open file descriptors count
     SessionId,     // int: Session id key
   };
   const std::map<ProcInfoColumn, std::string> m_procInfoColumn{
@@ -468,6 +469,7 @@ public:
       std::make_pair(ProcInfoColumn::CpuPercent, "CpuPercent"),
       std::make_pair(ProcInfoColumn::MemRSS, "MemRSS"),
       std::make_pair(ProcInfoColumn::MemPSS, "MemPSS"),
+      std::make_pair(ProcInfoColumn::FDCount, "FDCount"),
       std::make_pair(ProcInfoColumn::SessionId, "SessionId"),
   };
 
@@ -482,6 +484,7 @@ public:
     TotalCpuPercent, // int: Total Cpu percent in interval
     TotalMemRSS,     // int: Total RSS memory usage
     TotalMemPSS,     // int: Total PSS shared memory
+    TotalFDCount,    // int: Total open file descriptors count
     SessionId,       // int: Session id key
   };
   const std::map<ContextInfoColumn, std::string> m_contextInfoColumn{
@@ -495,6 +498,7 @@ public:
       std::make_pair(ContextInfoColumn::TotalCpuPercent, "TotalCpuPercent"),
       std::make_pair(ContextInfoColumn::TotalMemRSS, "TotalMemRSS"),
       std::make_pair(ContextInfoColumn::TotalMemPSS, "TotalMemPSS"),
+      std::make_pair(ContextInfoColumn::TotalFDCount, "TotalFDCount"),
       std::make_pair(ContextInfoColumn::SessionId, "SessionId"),
   };
 
