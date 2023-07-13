@@ -408,6 +408,18 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
         query);
   };
 
+  auto writeSysProcVMStat = [&db, &status, &query](
+                                 const std::string &sessionHash,
+                                 const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime,
+                                 uint64_t receiveTime) {
+    status = db->runQuery(
+        tkmQuery.addData(
+            Query::Type::SQLite3, sessionHash, sysProcVMStat, systemTime, monotonicTime, receiveTime),
+        query);
+  };
+
   switch (data.what()) {
   case tkm::msg::monitor::Data_What_ProcEvent: {
     tkm::msg::monitor::ProcEvent procEvent;
@@ -507,6 +519,16 @@ static bool doAddData(const shared_ptr<SQLiteDatabase> db, const IDatabase::Requ
                          data.system_time_sec(),
                          data.monotonic_time_sec(),
                          data.receive_time_sec());
+    break;
+  }
+  case tkm::msg::monitor::Data_What_SysProcVMStat: {
+    tkm::msg::monitor::SysProcVMStat sysProcVMStat;
+    data.payload().UnpackTo(&sysProcVMStat);
+    writeSysProcVMStat(App()->getSessionData().hash(),
+                        sysProcVMStat,
+                        data.system_time_sec(),
+                        data.monotonic_time_sec(),
+                        data.receive_time_sec());
     break;
   }
   default:
