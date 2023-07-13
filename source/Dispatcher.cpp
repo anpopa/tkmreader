@@ -58,6 +58,9 @@ static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sys
 static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysProcWireless,
                                  uint64_t systemTime,
                                  uint64_t monotonicTime);
+static void printSysProcVMStat(const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
+                                 uint64_t systemTime,
+                                 uint64_t monotonicTime);
 
 static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -384,6 +387,12 @@ static bool doProcessData(const std::shared_ptr<Dispatcher> mgr, const Dispatche
     printSysProcWireless(sysProcWireless, data.system_time_sec(), data.monotonic_time_sec());
     break;
   }
+  case tkm::msg::monitor::Data_What_SysProcVMStat: {
+    tkm::msg::monitor::SysProcVMStat sysProcVMStat;
+    data.payload().UnpackTo(&sysProcVMStat);
+    printSysProcVMStat(sysProcVMStat, data.system_time_sec(), data.monotonic_time_sec());
+    break;
+  }
   default:
     break;
   }
@@ -534,6 +543,7 @@ printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint
     entry["cpu_percent"] = procEntry.cpu_percent();
     entry["mem_rss"] = procEntry.mem_rss();
     entry["mem_pss"] = procEntry.mem_pss();
+    entry["fd_count"] = procEntry.fd_count();
     head[std::to_string(procEntry.pid())] = entry;
   }
 
@@ -561,6 +571,7 @@ static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
     entry["total_cpu_percent"] = ctxEntry.total_cpu_percent();
     entry["total_mem_rss"] = ctxEntry.total_mem_rss();
     entry["total_mem_pss"] = ctxEntry.total_mem_pss();
+    entry["total_fd_count"] = ctxEntry.total_fd_count();
     head[ctxEntry.ctx_name()] = entry;
   }
 
@@ -825,6 +836,56 @@ static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysPr
 
     head["io"] = io;
   }
+
+  writeJsonStream() << head;
+}
+
+static void printSysProcVMStat(const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
+                                uint64_t systemTime,
+                                uint64_t monotonicTime)
+{
+  Json::Value head;
+
+  head["type"] = "vmstat";
+  head["system_time"] = systemTime;
+  head["monotonic_time"] = monotonicTime;
+  head["receive_time"] = ::time(NULL);
+  head["session"] = App()->getSessionInfo().hash();
+
+  Json::Value vmstat;
+  vmstat["pgpgin"] = sysProcVMStat.pgpgin();
+  vmstat["pgpgout"] = sysProcVMStat.pgpgout();
+  vmstat["pswpin"] = sysProcVMStat.pswpin();
+  vmstat["pswpout"] = sysProcVMStat.pswpout();
+  vmstat["pgmajfault"] = sysProcVMStat.pgmajfault();
+  vmstat["pgreuse"] = sysProcVMStat.pgreuse();
+  vmstat["pgsteal_kswapd"] = sysProcVMStat.pgsteal_kswapd();
+  vmstat["pgsteal_direct"] = sysProcVMStat.pgsteal_direct();
+  vmstat["pgsteal_khugepaged"] = sysProcVMStat.pgsteal_khugepaged();
+  vmstat["pgsteal_anon"] = sysProcVMStat.pgsteal_anon();
+  vmstat["pgsteal_file"] = sysProcVMStat.pgsteal_file();
+  vmstat["pgscan_kswapd"] = sysProcVMStat.pgscan_kswapd();
+  vmstat["pgscan_direct"] = sysProcVMStat.pgscan_direct();
+  vmstat["pgscan_khugepaged"] = sysProcVMStat.pgscan_khugepaged();
+  vmstat["pgscan_direct_throttle"] = sysProcVMStat.pgscan_direct_throttle();
+  vmstat["pgscan_anon"] = sysProcVMStat.pgscan_anon();
+  vmstat["pgscan_file"] = sysProcVMStat.pgscan_file();
+  vmstat["oom_kill"] = sysProcVMStat.oom_kill();
+  vmstat["compact_stall"] = sysProcVMStat.compact_stall();
+  vmstat["compact_fail"] = sysProcVMStat.compact_fail();
+  vmstat["compact_success"] = sysProcVMStat.compact_success();
+  vmstat["thp_fault_alloc"] = sysProcVMStat.thp_fault_alloc();
+  vmstat["thp_collapse_alloc"] = sysProcVMStat.thp_collapse_alloc();
+  vmstat["thp_collapse_alloc_failed"] = sysProcVMStat.thp_collapse_alloc_failed();
+  vmstat["thp_file_alloc"] = sysProcVMStat.thp_file_alloc();
+  vmstat["thp_file_mapped"] = sysProcVMStat.thp_file_mapped();
+  vmstat["thp_split_page"] = sysProcVMStat.thp_split_page();
+  vmstat["thp_split_page_failed"] = sysProcVMStat.thp_split_page_failed();
+  vmstat["thp_zero_page_alloc"] = sysProcVMStat.thp_zero_page_alloc();
+  vmstat["thp_zero_page_alloc_failed"] = sysProcVMStat.thp_zero_page_alloc_failed();
+  vmstat["thp_swpout"] = sysProcVMStat.thp_swpout();
+  vmstat["thp_swpout_fallback"] = sysProcVMStat.thp_swpout_fallback();
+  head["vmstat"] = vmstat;
 
   writeJsonStream() << head;
 }

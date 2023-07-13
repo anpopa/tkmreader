@@ -330,6 +330,22 @@ void Application::configUpdateLanes(void)
     return getConnection()->writeEnvelope(requestEnvelope);
   };
 
+  const auto sysProcVMStatUpdateCallback = [this]() -> bool {
+    tkm::msg::Envelope requestEnvelope;
+    tkm::msg::collector::Request requestMessage;
+
+    App()->printVerbose("Request SysProcVMStat");
+    logInfo() << "Request SysProcVMStat data to " << App()->getDeviceData().name();
+
+    requestMessage.set_id("GetSysProcVMStat");
+    requestMessage.set_type(tkm::msg::collector::Request_Type_GetSysProcVMStat);
+    requestEnvelope.mutable_mesg()->PackFrom(requestMessage);
+    requestEnvelope.set_target(tkm::msg::Envelope_Recipient_Monitor);
+    requestEnvelope.set_origin(tkm::msg::Envelope_Recipient_Collector);
+
+    return getConnection()->writeEnvelope(requestEnvelope);
+  };
+
   // Clear the existing list
   m_dataSources.foreach (
       [this](const std::shared_ptr<DataSource> &entry) { m_dataSources.remove(entry); });
@@ -376,6 +392,10 @@ void Application::configUpdateLanes(void)
     case msg::monitor::SessionInfo_DataSource_SysProcDiskStats:
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcDiskStats", DataSource::UpdateLane::Fast, sysProcDiskStatsUpdateCallback));
+      break;
+    case msg::monitor::SessionInfo_DataSource_SysProcVMStat:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcVMStat", DataSource::UpdateLane::Fast, sysProcVMStatUpdateCallback));
       break;
     default:
       break;
@@ -424,6 +444,10 @@ void Application::configUpdateLanes(void)
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcDiskStats", DataSource::UpdateLane::Pace, sysProcDiskStatsUpdateCallback));
       break;
+    case msg::monitor::SessionInfo_DataSource_SysProcVMStat:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcVMStat", DataSource::UpdateLane::Pace, sysProcVMStatUpdateCallback));
+      break;
     default:
       break;
     }
@@ -470,6 +494,10 @@ void Application::configUpdateLanes(void)
     case msg::monitor::SessionInfo_DataSource_SysProcDiskStats:
       m_dataSources.append(std::make_shared<DataSource>(
           "SysProcDiskStats", DataSource::UpdateLane::Slow, sysProcDiskStatsUpdateCallback));
+      break;
+    case msg::monitor::SessionInfo_DataSource_SysProcVMStat:
+      m_dataSources.append(std::make_shared<DataSource>(
+          "SysProcVMStat", DataSource::UpdateLane::Slow, sysProcVMStatUpdateCallback));
       break;
     default:
       break;

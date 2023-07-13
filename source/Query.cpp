@@ -286,6 +286,89 @@ auto Query::createTables(Query::Type type) -> std::string
         << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
         << ") ON DELETE CASCADE);";
 
+    // SysProcVMStat table
+    out << "CREATE TABLE IF NOT EXISTS " << m_sysProcVMStatTableName << " (";
+    if (type == Query::Type::SQLite3) {
+      out << m_sysProcVMStatColumn.at(SysProcVMStatColumn::Id) << " INTEGER PRIMARY KEY, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SystemTime) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::MonotonicTime) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ReceiveTime) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgin) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgout) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpin) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpout) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGmajfault) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGreuse) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKswapd) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealDirect) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKhugepaged) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealAnon) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealFile) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKswapd) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirect) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKhugepaged) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirectThrottle) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanAnon) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanFile) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::OOMKill) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactStall) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactFail) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactSuccess) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFaultAlloc) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAlloc) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAllocFailed) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileAlloc) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileMapped) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPage) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPageFailed) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAlloc) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAllocFailed) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpout) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpoutFallback) << " INTEGER NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SessionId) << " INTEGER NOT NULL, ";
+    } else {
+      out << m_sysProcVMStatColumn.at(SysProcVMStatColumn::Id) << " SERIAL PRIMARY KEY, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SystemTime) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::MonotonicTime) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ReceiveTime) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgin) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgout) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpin) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpout) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGmajfault) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGreuse) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKswapd) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealDirect) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKhugepaged) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealAnon) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealFile) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKswapd) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirect) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKhugepaged) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirectThrottle) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanAnon) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanFile) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::OOMKill) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactStall) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactFail) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactSuccess) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFaultAlloc) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAlloc) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAllocFailed) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileAlloc) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileMapped) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPage) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPageFailed) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAlloc) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAllocFailed) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpout) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpoutFallback) << " BIGINT NOT NULL, "
+          << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SessionId) << " BIGINT NOT NULL, ";
+    }
+    out << "CONSTRAINT KFSession FOREIGN KEY(" << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SessionId)
+        << ") REFERENCES " << m_sessionsTableName << "(" << m_sessionColumn.at(SessionColumn::Id)
+        << ") ON DELETE CASCADE);";
+
     // ProcAcct table
     out << "CREATE TABLE IF NOT EXISTS " << m_procAcctTableName << " (";
     if (type == Query::Type::SQLite3) {
@@ -539,6 +622,7 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sysProcBuddyInfoTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_sysProcWirelessTableName << ";";
+    out << "DROP TABLE IF EXISTS " << m_sysProcVMStatTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procInfoTableName << ";";
     out << "DROP TABLE IF EXISTS " << m_procEventTableName << ";";
@@ -552,6 +636,7 @@ auto Query::dropTables(Query::Type type) -> std::string
     out << "DROP TABLE IF EXISTS " << m_sysProcPressureTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sysProcBuddyInfoTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_sysProcWirelessTableName << " CASCADE;";
+    out << "DROP TABLE IF EXISTS " << m_sysProcVMStatTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procAcctTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procInfoTableName << " CASCADE;";
     out << "DROP TABLE IF EXISTS " << m_procEventTableName << " CASCADE;";
@@ -1334,4 +1419,82 @@ auto Query::addData(Query::Type type,
   return out.str();
 }
 
+auto Query::addData(Query::Type type,
+                    const std::string &sessionHash,
+                    const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
+                    uint64_t systemTime,
+                    uint64_t monotonicTime,
+                    uint64_t receiveTime) -> std::string
+{
+  std::stringstream out;
+
+  if ((type == Query::Type::SQLite3) || (type == Query::Type::PostgreSQL)) {
+    out << "INSERT INTO " << m_sysProcVMStatTableName << " ("
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SystemTime) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::MonotonicTime) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ReceiveTime) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgin) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGpgout) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpin) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PSwpout) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGmajfault) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGreuse) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKswapd) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealDirect) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealKhugepaged) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealAnon) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGStealFile) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKswapd) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirect) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanKhugepaged) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanDirectThrottle) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanAnon) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::PGScanFile) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::OOMKill) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactStall) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactFail) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::CompactSuccess) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFaultAlloc) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAlloc) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpCollapseAllocFailed) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileAlloc) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpFileMapped) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPage) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSplitPageFailed) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAlloc) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpZeroPageAllocFailed) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpout) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::ThpSwpoutFallback) << ","
+        << m_sysProcVMStatColumn.at(SysProcVMStatColumn::SessionId) << ") VALUES ('" << systemTime
+        << "', '" << monotonicTime << "', '" << receiveTime << "', '" << sysProcVMStat.pgpgin()
+        << "', '" << sysProcVMStat.pgpgout() << "', '" << sysProcVMStat.pswpin() << "', '"
+        << sysProcVMStat.pswpout() << "', '" << sysProcVMStat.pgmajfault() << "', '"
+        << sysProcVMStat.pgreuse() << "', '" << sysProcVMStat.pgsteal_kswapd() << "', '"
+        << sysProcVMStat.pgsteal_direct() << "', '" << sysProcVMStat.pgsteal_khugepaged() << "', '"
+        << sysProcVMStat.pgsteal_anon() << "', '" << sysProcVMStat.pgsteal_file() << "', '"
+        << sysProcVMStat.pgscan_kswapd() << "', '"
+        << sysProcVMStat.pgscan_direct() << "', '" << sysProcVMStat.pgscan_khugepaged() << "', '"
+        << sysProcVMStat.pgscan_direct_throttle() << "', '" << sysProcVMStat.pgscan_anon() << "', '"
+        << sysProcVMStat.pgscan_file() << "', '" << sysProcVMStat.oom_kill() << "', '"
+        << sysProcVMStat.compact_stall() << "', '" << sysProcVMStat.compact_fail() << "', '"
+        << sysProcVMStat.compact_success() << "', '" << sysProcVMStat.thp_fault_alloc() << "', '"
+        << sysProcVMStat.thp_collapse_alloc() << "', '" << sysProcVMStat.thp_collapse_alloc_failed() << "', '"
+        << sysProcVMStat.thp_file_alloc() << "', '" << sysProcVMStat.thp_file_mapped() << "', '"
+        << sysProcVMStat.thp_split_page() << "', '" << sysProcVMStat.thp_split_page_failed() << "', '"
+        << sysProcVMStat.thp_zero_page_alloc() << "', '" << sysProcVMStat.thp_zero_page_alloc_failed() << "', '"
+        << sysProcVMStat.thp_swpout() << "', '" << sysProcVMStat.thp_swpout_fallback() << "', ";
+
+    if (type == Query::Type::SQLite3) {
+      out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+          << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " IS "
+          << "'" << sessionHash << "' AND EndTimestamp = 0));";
+    } else {
+      out << "(SELECT " << m_sessionColumn.at(SessionColumn::Id) << " FROM " << m_sessionsTableName
+          << " WHERE " << m_sessionColumn.at(SessionColumn::Hash) << " LIKE "
+          << "'" << sessionHash << "' AND EndTimestamp = 0));";
+    }
+  }
+
+  return out.str();
+}
 } // namespace tkm
