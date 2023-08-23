@@ -44,11 +44,12 @@ auto main(int argc, char **argv) -> int
                               {"database", required_argument, nullptr, 'd'},
                               {"json", required_argument, nullptr, 'j'},
                               {"verbose", no_argument, nullptr, 'x'},
+                              {"timeout", required_argument, nullptr, 't'},
                               {"version", no_argument, nullptr, 'v'},
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
-  while ((c = getopt_long(argc, argv, "n:a:p:d:j:ixvh", longopts, &longIndex)) != -1) {
+  while ((c = getopt_long(argc, argv, "n:a:p:d:j:t:ixvh", longopts, &longIndex)) != -1) {
     switch (c) {
     case 'n':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
@@ -68,6 +69,9 @@ auto main(int argc, char **argv) -> int
       break;
     case 'j':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::JsonPath, optarg));
+      break;
+    case 't':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Timeout, optarg));
       break;
     case 'x':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Verbose,
@@ -98,6 +102,9 @@ auto main(int argc, char **argv) -> int
     std::cout << "     --name, -n      <string>  Device name (default unknown)\n";
     std::cout << "     --address, -a   <string>  Device IP address (default localhost)\n";
     std::cout << "     --port, -p      <int>     Device port number (default 3357)\n";
+    std::cout
+        << "     --timeout, -t   <int>     Number of seconds (>3) for session inactivity timeout\n";
+    std::cout << "                               Default and minimum value is 3 seconds.\n";
     std::cout << "     --verbose, -v             Print info messages\n";
     std::cout << "  Output:\n";
     std::cout << "     --init, -i                Force output initialization if files exist\n";

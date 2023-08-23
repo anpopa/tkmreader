@@ -36,6 +36,8 @@ auto Arguments::getFor(Key key) -> string const
     return tkmDefaults.getFor(Defaults::Default::DatabasePath);
   case Key::JsonPath:
     return tkmDefaults.getFor(Defaults::Default::JsonPath);
+  case Key::Timeout:
+    return tkmDefaults.getFor(Defaults::Default::Timeout);
   case Key::Verbose:
     return tkmDefaults.getFor(Defaults::Default::Verbose);
   default:

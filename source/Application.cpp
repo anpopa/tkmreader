@@ -510,6 +510,7 @@ void Application::configUpdateLanes(void)
 void Application::resetInactivityTimer(size_t intervalUs)
 {
   if (m_inactiveTimer != nullptr) {
+    logInfo() << "Stop session inactivity timer";
     m_inactiveTimer->stop();
     remEventSource(m_inactiveTimer);
     m_inactiveTimer.reset();
@@ -528,8 +529,7 @@ void Application::resetInactivityTimer(size_t intervalUs)
       auto durationUs =
           std::chrono::duration_cast<USec>(timeNow - connection->getLastUpdateTime()).count();
 
-      // We reset the connection if no update in 5 intervals
-      if (durationUs > (intervalUs * 5)) {
+      if (durationUs > intervalUs) {
         logWarn() << "Session " << getSessionInfo().name() << " is inactive. Reset connection";
         remEventSource(m_connection);
         resetConnection();
@@ -539,6 +539,7 @@ void Application::resetInactivityTimer(size_t intervalUs)
       return true;
     });
 
+    logInfo() << "Start session inactivity timer with usec interval " << intervalUs;
     m_inactiveTimer->start(intervalUs, true);
     addEventSource(m_inactiveTimer);
   }

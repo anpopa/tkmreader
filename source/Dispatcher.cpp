@@ -59,8 +59,8 @@ static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysPr
                                  uint64_t systemTime,
                                  uint64_t monotonicTime);
 static void printSysProcVMStat(const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
-                                 uint64_t systemTime,
-                                 uint64_t monotonicTime);
+                               uint64_t systemTime,
+                               uint64_t monotonicTime);
 
 static bool doPrepareData(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
 static bool doConnect(const std::shared_ptr<Dispatcher> mgr, const Dispatcher::Request &rq);
@@ -313,9 +313,17 @@ static bool doStartStream()
   App()->requestStartupData();
   App()->startUpdateLanes();
 
-  // We use the fastLaneInterval for connection inactivity monitor timer
-  const auto inactivityInterval = App()->getSessionInfo().fast_lane_interval();
-  App()->resetInactivityTimer(inactivityInterval);
+  auto timeout = std::stoul(tkmDefaults.getFor(Defaults::Default::Timeout));
+  try {
+    timeout = std::stoul(App()->getArguments()->getFor(Arguments::Key::Timeout));
+  } catch (const std::exception &e) {
+    logWarn() << "Cannot convert timeout cli argument. Use default";
+  }
+  if (timeout < 3) {
+    timeout = std::stoul(tkmDefaults.getFor(Defaults::Default::Timeout));
+    logWarn() << "Invalid timeout value. Use default";
+  }
+  App()->resetInactivityTimer(timeout * 1000000); // sec 2 usec
 
   return true;
 }
@@ -841,8 +849,8 @@ static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysPr
 }
 
 static void printSysProcVMStat(const tkm::msg::monitor::SysProcVMStat &sysProcVMStat,
-                                uint64_t systemTime,
-                                uint64_t monotonicTime)
+                               uint64_t systemTime,
+                               uint64_t monotonicTime)
 {
   Json::Value head;
 
