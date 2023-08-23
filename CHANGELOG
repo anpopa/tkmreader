@@ -1,3 +1,6 @@
+* Thu Aug 123 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.2
+- Add CLI option for session inactivity timeout
+
 * Thu Jul 12 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.1
 - Add interface for ProcInfo file descriptor count
 - Add support for collecting SysProcVMStat data source
