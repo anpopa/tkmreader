@@ -358,43 +358,43 @@ public:
   };
 
   enum class SysProcVMStatColumn {
-    Id,                       // int: Primary key
-    SystemTime,               // int: SystemTime
-    MonotonicTime,            // int: MonotonicTime
-    ReceiveTime,              // int: Receive timestamp
-    PGpgin,                   // int: pgpgin
-    PGpgout,                  // int: pgpgout
-    PSwpin,                   // int: pswpin
-    PSwpout,                  // int: pswpout
-    PGmajfault,               // int: pgmajfault
-    PGreuse,                  // int: pgreuse
-    PGStealKswapd,            // int: pgsteal_kswapd
-    PGStealDirect,            // int: pgsteal_direct
-    PGStealKhugepaged,        // int: pgsteal_khugepaged
-    PGStealAnon,              // int: pgsteal_anon
-    PGStealFile,              // int: pgsteal_file
-    PGScanKswapd,             // int: pgscan_kswapd
-    PGScanDirect,             // int: pgscan_direct
-    PGScanKhugepaged,         // int: pgscan_khugepaged
-    PGScanDirectThrottle,     // int: pgscan_direct_throttle
-    PGScanAnon,               // int: pgscan_anon
-    PGScanFile,               // int: pgscan_file
-    OOMKill,                  // int: oom_kill
-    CompactStall,             // int: compact_stall
-    CompactFail,              // int: compact_fail
-    CompactSuccess,           // int: compact_success
-    ThpFaultAlloc,            // int: thp_fault_alloc
-    ThpCollapseAlloc,         // int: thp_collapse_alloc
-    ThpCollapseAllocFailed,   // int: thp_collapse_alloc_failed
-    ThpFileAlloc,             // int: thp_file_alloc
-    ThpFileMapped,            // int: thp_file_mapped
-    ThpSplitPage,             // int: thp_split_page
-    ThpSplitPageFailed,       // int: thp_split_page_failed
-    ThpZeroPageAlloc,         // int: thp_zero_page_alloc
-    ThpZeroPageAllocFailed,   // int: thp_zero_page_alloc_failed
-    ThpSwpout,                // int: thp_swpout
-    ThpSwpoutFallback,        // int: thp_swpout_fallback
-    SessionId,                // int: Session id key
+    Id,                     // int: Primary key
+    SystemTime,             // int: SystemTime
+    MonotonicTime,          // int: MonotonicTime
+    ReceiveTime,            // int: Receive timestamp
+    PGpgin,                 // int: pgpgin
+    PGpgout,                // int: pgpgout
+    PSwpin,                 // int: pswpin
+    PSwpout,                // int: pswpout
+    PGmajfault,             // int: pgmajfault
+    PGreuse,                // int: pgreuse
+    PGStealKswapd,          // int: pgsteal_kswapd
+    PGStealDirect,          // int: pgsteal_direct
+    PGStealKhugepaged,      // int: pgsteal_khugepaged
+    PGStealAnon,            // int: pgsteal_anon
+    PGStealFile,            // int: pgsteal_file
+    PGScanKswapd,           // int: pgscan_kswapd
+    PGScanDirect,           // int: pgscan_direct
+    PGScanKhugepaged,       // int: pgscan_khugepaged
+    PGScanDirectThrottle,   // int: pgscan_direct_throttle
+    PGScanAnon,             // int: pgscan_anon
+    PGScanFile,             // int: pgscan_file
+    OOMKill,                // int: oom_kill
+    CompactStall,           // int: compact_stall
+    CompactFail,            // int: compact_fail
+    CompactSuccess,         // int: compact_success
+    ThpFaultAlloc,          // int: thp_fault_alloc
+    ThpCollapseAlloc,       // int: thp_collapse_alloc
+    ThpCollapseAllocFailed, // int: thp_collapse_alloc_failed
+    ThpFileAlloc,           // int: thp_file_alloc
+    ThpFileMapped,          // int: thp_file_mapped
+    ThpSplitPage,           // int: thp_split_page
+    ThpSplitPageFailed,     // int: thp_split_page_failed
+    ThpZeroPageAlloc,       // int: thp_zero_page_alloc
+    ThpZeroPageAllocFailed, // int: thp_zero_page_alloc_failed
+    ThpSwpout,              // int: thp_swpout
+    ThpSwpoutFallback,      // int: thp_swpout_fallback
+    SessionId,              // int: Session id key
   };
   const std::map<SysProcVMStatColumn, std::string> m_sysProcVMStatColumn{
       std::make_pair(SysProcVMStatColumn::Id, "Id"),
