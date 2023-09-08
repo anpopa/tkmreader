@@ -1,4 +1,7 @@
-* Thu Aug 123 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.2
+* Thu Aug 8 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.3
+- Check target interface version and add force flag
+
+* Thu Aug 13 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.2
 - Add CLI option for session inactivity timeout
 
 * Thu Jul 12 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.1
