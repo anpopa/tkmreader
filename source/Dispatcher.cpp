@@ -279,15 +279,19 @@ static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher
   App()->getSessionInfo().CopyFrom(sessionInfo);
   App()->getSessionData().set_hash(App()->getSessionInfo().hash());
 
-  if (sessionInfo.libtkm_version() != TKMLIB_VERSION) {
-    App()->printVerbose("WARNING: Target data interface missmatch (device: v" +
-                        sessionInfo.libtkm_version() + " reader: v" + TKMLIB_VERSION +
-                        "). Invalid data may be recorded!");
-    if (App()->getArguments()->getFor(Arguments::Key::Force) !=
-        tkmDefaults.valFor(Defaults::Val::True)) {
-      Dispatcher::Request rq{.action = Dispatcher::Action::Quit};
-      return mgr->pushRequest(rq);
+  if (!sessionInfo.libtkm_version().empty()) {
+    if (sessionInfo.libtkm_version() != TKMLIB_VERSION) {
+      App()->printVerbose("WARNING: Target data interface missmatch (device: v" +
+                          sessionInfo.libtkm_version() + " reader: v" + TKMLIB_VERSION +
+                          "). Invalid data may be recorded!");
+      if (App()->getArguments()->getFor(Arguments::Key::Force) !=
+          tkmDefaults.valFor(Defaults::Val::True)) {
+        Dispatcher::Request rq{.action = Dispatcher::Action::Quit};
+        return mgr->pushRequest(rq);
+      }
     }
+  } else {
+    logWarn() << "TKMLIB version not provided by Monitor for session: " << sessionInfo.hash();
   }
 
   logDebug() << "SessionInfo FastLaneInterval=" << sessionInfo.fast_lane_interval()
