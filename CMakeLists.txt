@@ -133,15 +133,13 @@ target_link_libraries(tkmreader
         BSWInfra
         pthread
         tkm::tkm
-        jsoncpp
         sqlite3
         ${PROTOBUF_LIBRARY}
-        ${JSONCPP_LIBRARY}
+        ${JSONCPP_LINK_LIBRARIES}
 )
 
 include_directories(
     ${Protobuf_INCLUDE_DIRS}
-    ${jsoncpp_INCLUDE_DIRS}
     ${SQLite3_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/source
     ${CMAKE_BINARY_DIR}/source

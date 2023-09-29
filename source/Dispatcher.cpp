@@ -478,7 +478,7 @@ printProcAcct(const tkm::msg::monitor::ProcAcct &acct, uint64_t systemTime, uint
   head["type"] = "acct";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value common;
@@ -553,7 +553,7 @@ printProcInfo(const tkm::msg::monitor::ProcInfo &info, uint64_t systemTime, uint
   head["type"] = "procinfo";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   for (const auto &procEntry : info.entry()) {
@@ -584,7 +584,7 @@ static void printContextInfo(const tkm::msg::monitor::ContextInfo &info,
   head["type"] = "ctxinfo";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   for (const auto &ctxEntry : info.entry()) {
@@ -612,7 +612,7 @@ static void printProcEvent(const tkm::msg::monitor::ProcEvent &event,
   head["type"] = "procstats";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   body["fork_count"] = event.fork_count();
@@ -634,7 +634,7 @@ static void printSysProcStat(const tkm::msg::monitor::SysProcStat &sysProcStat,
   head["type"] = "stat";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value cpu;
@@ -665,7 +665,7 @@ static void printSysProcBuddyInfo(const tkm::msg::monitor::SysProcBuddyInfo &sys
   head["type"] = "buddyinfo";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   auto index = 0;
@@ -689,7 +689,7 @@ static void printSysProcWireless(const tkm::msg::monitor::SysProcWireless &sysPr
   head["type"] = "wireless";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   auto index = 0;
@@ -721,7 +721,7 @@ static void printSysProcMemInfo(const tkm::msg::monitor::SysProcMemInfo &sysProc
   head["type"] = "meminfo";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value meminfo;
@@ -755,7 +755,7 @@ static void printSysProcDiskStats(const tkm::msg::monitor::SysProcDiskStats &sys
   head["type"] = "diskstats";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   for (const auto &diskEntry : sysProcDiskStats.disk()) {
@@ -786,7 +786,7 @@ static void printSysProcPressure(const tkm::msg::monitor::SysProcPressure &sysPr
   head["type"] = "psi";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   if (sysProcPressure.has_cpu_some() || sysProcPressure.has_cpu_full()) {
@@ -873,7 +873,7 @@ static void printSysProcVMStat(const tkm::msg::monitor::SysProcVMStat &sysProcVM
   head["type"] = "vmstat";
   head["system_time"] = systemTime;
   head["monotonic_time"] = monotonicTime;
-  head["receive_time"] = ::time(NULL);
+  head["receive_time"] = static_cast<uint64_t>(::time(NULL));
   head["session"] = App()->getSessionInfo().hash();
 
   Json::Value vmstat;
