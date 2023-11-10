@@ -10,7 +10,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
 set(CPACK_PACKAGE_VENDOR "Alin Popa")
-set(CPACK_PACKAGE_CONTACT "alin.popa@fxdata.ro")
+set(CPACK_PACKAGE_CONTACT "alin.popa@triboo-tech.ro")
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
@@ -33,7 +33,7 @@ set(CPACK_DEBIAN_DEBUGINFO_PACKAGE OFF)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Alin Popa")
 set(CPACK_DEBIAN_PACKAGE_SECTION "Utilities")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libtaskmonitor-bin (>=1.1.2), libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31), libprotobuf17 (>=3.6)")
+  "libtaskmonitor-bin (>=1.1.2), libjsoncpp24 (>= 1.9.4), libsqlite3-0 (>= 3.31), libprotobuf23 (>=3.6)")
 
 # FreeBSD
 set(CPACK_FREEBSD_DEBUGINFO_PACKAGE OFF)

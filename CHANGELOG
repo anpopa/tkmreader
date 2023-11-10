@@ -1,3 +1,6 @@
+* Thu Nov 10 2023 Alin Popa <alin.popa@triboo-tech.ro> - 1.6.4
+- Change force flag to strict flag to preserve the default behaviour
+
 * Thu Aug 8 2023 Alin Popa <alin.popa@fxdata.ro> - 1.6.3
 - Check target interface version and add force flag
 

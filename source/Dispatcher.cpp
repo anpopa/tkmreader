@@ -284,7 +284,7 @@ static bool doSetSession(const std::shared_ptr<Dispatcher> mgr, const Dispatcher
       App()->printVerbose("WARNING: Target data interface missmatch (device: v" +
                           sessionInfo.libtkm_version() + " reader: v" + TKMLIB_VERSION +
                           "). Invalid data may be recorded!");
-      if (App()->getArguments()->getFor(Arguments::Key::Force) !=
+      if (App()->getArguments()->getFor(Arguments::Key::Strict) ==
           tkmDefaults.valFor(Defaults::Val::True)) {
         Dispatcher::Request rq{.action = Dispatcher::Action::Quit};
         return mgr->pushRequest(rq);

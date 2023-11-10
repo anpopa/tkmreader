@@ -45,12 +45,12 @@ auto main(int argc, char **argv) -> int
                               {"json", required_argument, nullptr, 'j'},
                               {"verbose", no_argument, nullptr, 'x'},
                               {"timeout", required_argument, nullptr, 't'},
-                              {"force", no_argument, nullptr, 'f'},
+                              {"strict", no_argument, nullptr, 's'},
                               {"version", no_argument, nullptr, 'v'},
                               {"help", no_argument, nullptr, 'h'},
                               {nullptr, 0, nullptr, 0}};
 
-  while ((c = getopt_long(argc, argv, "n:a:p:d:j:t:ixfvh", longopts, &longIndex)) != -1) {
+  while ((c = getopt_long(argc, argv, "n:a:p:d:j:t:ixsvh", longopts, &longIndex)) != -1) {
     switch (c) {
     case 'n':
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Name, optarg));
@@ -78,8 +78,8 @@ auto main(int argc, char **argv) -> int
       args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Verbose,
                                                          tkmDefaults.valFor(Defaults::Val::True)));
       break;
-    case 'f':
-      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Force,
+    case 's':
+      args.insert(std::pair<Arguments::Key, std::string>(Arguments::Key::Strict,
                                                          tkmDefaults.valFor(Defaults::Val::True)));
       break;
     case 'v':
@@ -110,8 +110,7 @@ auto main(int argc, char **argv) -> int
     std::cout
         << "     --timeout, -t   <int>     Number of seconds (>3) for session inactivity timeout\n";
     std::cout << "                               Default and minimum value is 3 seconds.\n";
-    std::cout << "     --force, -f               Continue reading session data even if target "
-                 "interfaces version missmatch\n";
+    std::cout << "     --strict, -s              Stop if target libtkm version missmatch\n";
     std::cout << "     --verbose, -v             Print info messages\n";
     std::cout << "  Output:\n";
     std::cout << "     --init, -i                Force output initialization if files exist\n";
